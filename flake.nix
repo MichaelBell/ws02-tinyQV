@@ -9,7 +9,7 @@
   };
 
   inputs = {
-    librelane.url = "github:librelane/librelane/3.0.0";
+    librelane.url = "github:librelane/librelane/leo/wafer-space";
   };
 
   outputs =
