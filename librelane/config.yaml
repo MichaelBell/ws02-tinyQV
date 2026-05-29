@@ -8,23 +8,24 @@ meta:
     +KLayout.SealRing: KLayout.Render
 
     # Disable KLayout DRC
-    #KLayout.DRC: null
-    #Checker.KLayoutDRC: null
+    KLayout.DRC: null
+    Checker.KLayoutDRC: null
 
     # Disable KLayout antenna check
-    #KLayout.Antenna: null
-    #Checker.KLayoutAntenna: null
+    KLayout.Antenna: null
+    Checker.KLayoutAntenna: null
 
     # Disable KLayout density check
-    #KLayout.Density: null
-    #Checker.KLayoutDensity: null
+    KLayout.Density: null
+    Checker.KLayoutDensity: null
 
     # Save time during development
     # Enable for sign-off
-    #OpenROAD.IRDropReport: null
-    #Magic.DRC: null
-    #Checker.MagicDRC: null
-    #KLayout.XOR: null
+    OpenROAD.IRDropReport: null
+    Magic.DRC: null
+    Checker.MagicDRC: null
+    KLayout.XOR: null
+    Checker.XOR: null
     #Netgen.LVS: null
     #Checker.LVS: null
 
@@ -32,6 +33,58 @@ DESIGN_NAME: chip_top
 VERILOG_FILES:
 - dir::../src/chip_top.sv
 - dir::../src/chip_core.sv
+- dir::../src/project.v
+- dir::../src/tinyQV/cpu/tinyqv.v
+- dir::../src/tinyQV/cpu/alu.v
+- dir::../src/tinyQV/cpu/buffer.v
+- dir::../src/tinyQV/cpu/core.v
+- dir::../src/tinyQV/cpu/counter.v
+- dir::../src/tinyQV/cpu/cpu.v
+- dir::../src/tinyQV/cpu/decode.v
+- dir::../src/tinyQV/cpu/mem_ctrl.v
+- dir::../src/tinyQV/cpu/qspi_ctrl.v
+- dir::../src/tinyQV/cpu/qspi_setup.v
+- dir::../src/tinyQV/cpu/register.v
+- dir::../src/tinyQV/cpu/latch_reg.v
+- dir::../src/tinyQV/cpu/time.v
+- dir::../src/tinyQV/cpu/internal_ram.v
+- dir::../src/tinyQV/peri/uart/uart_tx.v
+- dir::../src/peripherals.v
+- dir::../src/peri_byte_empty.v
+- dir::../src/peri_full_empty.v
+- dir::../src/user_peripherals/uart/peri_uart.v
+- dir::../src/user_peripherals/uart/uart_rx.v
+- dir::../src/user_peripherals/uart/uart_tx.v
+- dir::../src/user_peripherals/spi.v
+- dir::../src/user_peripherals/game_pmod.v
+- dir::../src/user_peripherals/matt_pwm/matt_pwm.v
+- dir::../src/user_peripherals/matt_pwm/pwm_strobe_gen.v
+- dir::../src/user_peripherals/matt_pwm/pwm.v
+- dir::../src/user_peripherals/pulse_transmitter/peripheral.v
+- dir::../src/user_peripherals/pulse_transmitter/carrier.v
+- dir::../src/user_peripherals/pulse_transmitter/countdown_timer.v
+- dir::../src/user_peripherals/pulse_transmitter/delay_1.v
+- dir::../src/user_peripherals/pulse_transmitter/delay_2.v
+- dir::../src/user_peripherals/pulse_transmitter/simple_falling_edge_detector.v
+- dir::../src/user_peripherals/pulse_transmitter/simple_rising_edge_detector.v
+- dir::../src/user_peripherals/ubcd/ascii.v
+- dir::../src/user_peripherals/ubcd/cistercian.v
+- dir::../src/user_peripherals/ubcd/kaktovik.v
+- dir::../src/user_peripherals/ubcd/peripheral.v
+- dir::../src/user_peripherals/ubcd/ubcd.v
+- dir::../src/user_peripherals/pwl_synth/pwl_synth.sv
+- dir::../src/user_peripherals/pwl_synth/pwl_synth_memory.sv
+- dir::../src/user_peripherals/AY8913/attenuation.v
+- dir::../src/user_peripherals/AY8913/envelope.v
+- dir::../src/user_peripherals/AY8913/noise.v
+- dir::../src/user_peripherals/AY8913/pwm.v
+- dir::../src/user_peripherals/AY8913/signal_edge.v
+- dir::../src/user_peripherals/AY8913/tone.v
+- dir::../src/user_peripherals/AY8913/ay8913.v
+- dir::../src/user_peripherals/AY8913/peripheral.v
+- dir::../src/user_peripherals/vga_gfx/peripheral.v
+- dir::../src/user_peripherals/vga_gfx/vga_timing.v
+- dir::../src/user_peripherals/vga_gfx/latch_config.v
 
 # Enable plugin for better SystemVerilog support
 # USE_SLANG: True
@@ -63,14 +116,19 @@ CLOCK_PORT: clk_PAD
 CLOCK_NET: clk_pad/Y
 CLOCK_PERIOD: 40 # 25 MHz
 
-# Overfix hold violations
-PL_RESIZER_HOLD_SLACK_MARGIN: 0.35
-GRT_RESIZER_HOLD_SLACK_MARGIN: 0.3
+# Fix hold violations
+PL_RESIZER_HOLD_SLACK_MARGIN: 0.25
+GRT_RESIZER_HOLD_SLACK_MARGIN: 0.2
 
-# Increase density for more 
-# logic on your die
-PL_TARGET_DENSITY_PCT: 35
+MAX_TRANSITION_CONSTRAINT: 1.8
+
+# Increase for more logic
+# on your die
+PL_TARGET_DENSITY_PCT: 50
 GRT_ALLOW_CONGESTION: true
+
+SYNTH_AUTONAME: True
+SYNTH_STRATEGY: "AREA 3"
 
 # Allow a larger Y displacement
 PL_MAX_DISPLACEMENT_Y: 200
