@@ -76,15 +76,11 @@ MACROS:
         - pdk_dir::libs.ref/gf180mcu_fd_ip_sram/lib/gf180mcu_fd_ip_sram__sram512x8m8wm1__ss_125C_4v50.lib
     instances:
       # Make sure to specify the SRAMs in pdn_cfg.tcl
-      i_chip_core.sram_0:
+      i_chip_core.tt.i_tinyqv.cpu.i_scratch.i_sram:
         location: [490, 500]
         orientation: N
-      i_chip_core.sram_1:
-        location: [970, 500]
-        orientation: E
 
 # This is an alternative method compared to
 # specifying the power connections in the RTL
 PDN_MACRO_CONNECTIONS:
-- "i_chip_core.sram_0 VDD VSS VDD VSS"
-- "i_chip_core.sram_1 VDD VSS VDD VSS"
+- "i_chip_core.tt.i_tinyqv.cpu.i_scratch.i_sram VDD VSS VDD VSS"
