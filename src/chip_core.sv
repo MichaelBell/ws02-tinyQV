@@ -78,11 +78,15 @@ module chip_core #(
     assign bidir_out[15] = uio_out[7];           // RAM B CS
     assign bidir_oe[15] = uio_oe[7];
 
-    assign bidir_ie[NUM_BIDIR_PADS-1:29] = '0;
-    assign bidir_oe[NUM_BIDIR_PADS-1:29] = '0;
-    assign bidir_pu[NUM_BIDIR_PADS-1:29] = '0;
-    assign bidir_pd[NUM_BIDIR_PADS-1:29] = '1;
-    assign bidir_out[NUM_BIDIR_PADS-1:29] = '0;
+    assign bidir_ie[NUM_BIDIR_PADS-1:37] = '0;
+    assign bidir_oe[NUM_BIDIR_PADS-1:37] = '0;
+    assign bidir_pu[NUM_BIDIR_PADS-1:37] = '0;
+    assign bidir_pd[NUM_BIDIR_PADS-1:37] = '1;
+    assign bidir_out[NUM_BIDIR_PADS-1:37] = '0;
+    assign bidir_ie[36:29] = '0;
+    assign bidir_oe[36:29] = '1;
+    assign bidir_pu[36:29] = '0;
+    assign bidir_pd[36:29] = '0;
 
     generate
     for (genvar i=0; i<8; i++) begin : bidir_inputs
@@ -104,6 +108,26 @@ module chip_core #(
         .uart_rts(bidir_out[26]),
         .debug_uart_txd(bidir_out[27]),
         .debug_signal(bidir_out[28])
+    );
+
+    logic [12:0] count;
+
+    always_ff @(posedge clk) begin
+        if (!rst_n) begin
+            count <= '0;
+        end else begin
+            count <= count + 1;
+        end
+    end
+
+    // Test
+    text_ram i_text(
+        .clk(clk),
+        .rstn(rst_n),
+        .data_addr(count[12:1]),
+        .data_write_n(count[0]),
+        .data_in(bidir_in[36:29]),
+        .data_out(bidir_out[36:29])
     );
 
 endmodule

@@ -26,7 +26,7 @@ if { $::env(CLOCK_PORT) == $::env(CLOCK_NET) } {
 puts "\[INFO] Using clock $clock_port…"
 create_clock {*}$port_args -name $clock_port -period $::env(CLOCK_PERIOD)
 
-set input_setup_delay_value [expr $::env(CLOCK_PERIOD) * 0.65]
+set input_setup_delay_value [expr $::env(CLOCK_PERIOD) * 0.6]
 set input_hold_delay_value [expr $::env(CLOCK_PERIOD) * 0.25]
 set output_setup_delay_value [expr $::env(CLOCK_PERIOD) * 0.65]
 set output_hold_delay_value 1
