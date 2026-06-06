@@ -107,6 +107,7 @@
               ps: with ps; [
                 # Verification
                 cocotb
+                pytest
                 riscvmodel
 
                 # For KLayout Python DRC runner
