@@ -74,6 +74,12 @@ module tb #(
 
   assign input_in = {3'b001, uart_rx};
 
+  wire hsync = bidir_out[36];
+  wire vsync = bidir_out[32];
+  wire [1:0] red   = {bidir_out[29], bidir_out[33]};
+  wire [1:0] green = {bidir_out[30], bidir_out[34]};
+  wire [1:0] blue  = {bidir_out[31], bidir_out[35]};
+
 `ifdef USE_POWER_PINS
   wire VPWR = 1'b1;
   wire VGND = 1'b0;
