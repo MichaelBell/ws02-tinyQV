@@ -32,7 +32,6 @@ module font_8x16  (
     );
 
     assign font_ram_addr = char_read ? {char_in[4:0], y, x} : data_addr;
-    assign data_out = font_ram_out;
 
     reg [7:0] line_data;
     always @(*) begin
@@ -43,10 +42,13 @@ module font_8x16  (
     end
 
     reg [7:0] line_data_r;
+    reg [7:0] char_data_r;
     always @(posedge clk) begin
-        line_data_r <= line_data;
+        if (char_read) char_data_r <= line_data;
+        else line_data_r <= line_data;
     end
 
-    assign char_data = line_data_r;
+    assign char_data = char_data_r;
+    assign data_out = line_data_r;
 
 endmodule
