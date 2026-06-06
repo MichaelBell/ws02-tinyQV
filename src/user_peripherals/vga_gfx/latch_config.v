@@ -26,15 +26,6 @@ module vga_latch_config #(
 
     wire _unused = &{clk, 1'b0};
 
-`elsif SCL_gf180mcu_as_sc_mcu7t3v3
-    reg [WIDTH-1:0] state;
-
-    always @(posedge clk) begin
-        if (wen) state <= data_in;
-    end
-
-    assign data_out = state;
-
 `else
     /* verilator lint_off PINMISSING */
     genvar i;
@@ -42,6 +33,8 @@ module vga_latch_config #(
         for (i = 0; i < WIDTH; i = i+1) begin : gen_latch
 `ifdef SCL_sky130_fd_sc_hd
             sky130_fd_sc_hd__dlxtp_1 state (.Q(data_out[i]), .D(data_in[i]), .GATE(wen) );
+`elsif SCL_gf180mcu_as_sc_mcu7t3v3
+            gf180mcu_as_sc_mcu7t3v3__dlxfp_2 p_latch(.ENA(wen), .D(data_in[i]), .Q(data_out[i]));
 `else
             gf180mcu_fd_sc_mcu7t5v0__latq_1 p_latch(.E(wen), .D(data_in[i]), .Q(data_out[i]));
 `endif
