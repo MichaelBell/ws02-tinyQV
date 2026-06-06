@@ -66,33 +66,38 @@ module tinyQV_text_mode_video (
     wire [7:0] text_out;
     wire [7:0] font_out;
     wire [7:0] char_data;
+    wire text_read = pix_x[1:0] == 2'b10;
+    wire [11:0] text_addr = pix_y[8:4] * 12'd80 + pix_x[8:3];
     text_ram i_text(
         .clk(clk),
         .rstn(rst_n),
-        .data_addr(addr_in),
-        .data_write_n(data_write_n | text_ram_addr_n),
+        .data_addr(text_read ? text_addr : addr_in),
+        .data_write_n(data_write_n | text_ram_addr_n | pix_x[1]),
         .data_in(data_in),
         .data_out(text_out)
     );
 
-    wire char_read = pix_x[1:0] == 2'b11;
+    wire font_read = pix_x[1:0] == 2'b11;
     font_8x16 i_font (
         .clk(clk),
         .rstn(rst_n),
         .data_addr(addr_in[9:0]),
-        .data_write_n(data_write_n | font_ram_addr_n),
+        .data_write_n(data_write_n | font_ram_addr_n | pix_x[1]),
         .data_in(data_in),
         .data_out(font_out),
-        .char_read(char_read),
-        .char_in({pix_y[8:4], pix_x[8:7]}),
+        .char_read(font_read),
+        .char_in(text_out[6:0]),
         .y(pix_y[3:0]),
         .x(pix_x[2]),
         .char_data(char_data)
     );
 
+    wire data_txn = !data_read_n || !data_write_n;
+    //reg data_txn_r;
     reg data_ready_r;
     always @(posedge clk) begin
-        data_ready_r <= (!char_read || !text_ram_addr_n) && !data_read_n;
+        //data_txn_r <= data_txn;
+        data_ready_r <= !pix_x[1] && data_txn;
     end
 
     wire [1:0] char_colour = char_data[{pix_x[1:0], 1'b0} +: 2];
