@@ -45,4 +45,4 @@ sram_pdn_ns pdn_cpu_ram    i_chip_core.tt.i_tinyqv.cpu.i_scratch.i_sram
 sram_pdn_ns pdn_text_ram0  i_chip_core.i_text.i_sram0
 sram_pdn_ns pdn_text_ram1  i_chip_core.i_text.i_sram1
 sram_pdn_ns pdn_text_ram2  i_chip_core.i_text.i_sram2
-
+sram_pdn_ns pdn_font_ram   i_chip_core.i_font.i_sram
