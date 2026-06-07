@@ -15,6 +15,8 @@ module chip_core #(
     
     input  wire clk,       // clock
     input  wire rst_n,     // reset (active low)
+    input  wire clk5x,     // clock for DV serialization
+    input  wire prog_clk,
     
     input  wire [NUM_INPUT_PADS-1:0] input_in,   // Input value
     output wire [NUM_INPUT_PADS-1:0] input_pu,   // Pull-up
@@ -34,11 +36,9 @@ module chip_core #(
 
     // See here for usage: https://gf180mcu-pdk.readthedocs.io/en/latest/IPs/IO/gf180mcu_fd_io/digital.html
     
-    // Pull up for prog_n
-    assign input_pu[1:0] = 2'b10;
-    assign input_pd[1:0] = 2'b00;
-    assign input_pu[NUM_INPUT_PADS-1:2] = '0;
-    assign input_pd[NUM_INPUT_PADS-1:2] = '0;
+    // Pull up for prog_cs, use_hdmi_n, prog_n
+    assign input_pu = 5'b10110;
+    assign input_pd = 5'b00000;
 
     // Set the bidir as the TT inputs, bidirs, outputs
     assign bidir_oe[7:0] = '0;
@@ -49,40 +49,43 @@ module chip_core #(
     assign bidir_cs = '0;
     assign bidir_sl = '0;
     assign bidir_ie[28:0] = ~bidir_oe[28:0];
-    assign bidir_pu[7:0] = '0;
+    assign bidir_pu[7:0] = 8'b10000000;  // Pull up in7 to avoid glitching UART RX if not connected
     assign bidir_pu[28:16] = '0;
     assign bidir_pd[7:0] = '0;
     assign bidir_pd[28:16] = '0;
 
     // Set the pulls on the QSPI data to configure sensible default latency, and pull up chip selects
-    assign bidir_pu[15:8] = 8'b11000011;
-    assign bidir_pd[15:8] = 8'b00110100;
+    wire prog_n = input_in[1];
+    assign bidir_pu[15:8] = prog_n ? 8'b11000011 : 8'b11110011;
+    assign bidir_pd[15:8] = prog_n ? 8'b00110100 : 8'b00000100;
 
     wire [7:0] uio_in;
     wire [7:0] uio_oe;
     wire [7:0] uio_out;
-    assign bidir_out[8] = uio_out[0];  // Flash CS
-    assign bidir_oe[8]  = uio_oe[0];
-    assign bidir_out[9] = uio_out[1];  // Flash MOSI
-    assign bidir_oe[9]  = uio_oe[1];
-    assign bidir_out[10] = uio_out[2];           // Flash MISO
-    assign bidir_oe[10]  = uio_oe[2];
-    assign bidir_out[11] = uio_out[3]; // Flash SCK
-    assign bidir_oe[11]  = uio_oe[3];
+    assign bidir_out[8] = prog_n ? uio_out[0] : input_in[4];  // Flash CS
+    assign bidir_oe[8]  = prog_n ? uio_oe[0]  : '1;
+    assign bidir_out[9] = prog_n ? uio_out[1] : input_in[3];  // Flash MOSI
+    assign bidir_oe[9]  = prog_n ? uio_oe[1]  : '1;
+    assign bidir_out[10] = prog_n ? uio_out[2] : '0;          // Flash MISO
+    assign bidir_oe[10]  = prog_n ? uio_oe[2]  : '0;
+    assign bidir_out[11] = prog_n ? uio_out[3] : prog_clk;    // Flash SCK
+    assign bidir_oe[11]  = prog_n ? uio_oe[3]  : '1;
     assign bidir_out[12] = uio_out[4];
-    assign bidir_oe[12] = uio_oe[4];
+    assign bidir_oe[12] = prog_n ? uio_oe[4] : '0;
     assign bidir_out[13] = uio_out[5];
-    assign bidir_oe[13] = uio_oe[5];
-    assign bidir_out[14] = uio_out[6];           // RAM A CS
-    assign bidir_oe[14] = uio_oe[6];
-    assign bidir_out[15] = uio_out[7];           // RAM B CS
-    assign bidir_oe[15] = uio_oe[7];
+    assign bidir_oe[13] = prog_n ? uio_oe[5] : '0;
+    assign bidir_out[14] = prog_n ? uio_out[6] : '1;           // RAM A CS
+    assign bidir_oe[14] = prog_n ? uio_oe[6] : '0;
+    assign bidir_out[15] = prog_n ? uio_out[7] : '1;           // RAM B CS
+    assign bidir_oe[15] = prog_n ? uio_oe[7] : '0;
 
-    assign bidir_ie[NUM_BIDIR_PADS-1:37] = '0;
-    assign bidir_oe[NUM_BIDIR_PADS-1:37] = '0;
-    assign bidir_pu[NUM_BIDIR_PADS-1:37] = '0;
-    assign bidir_pd[NUM_BIDIR_PADS-1:37] = '1;
-    assign bidir_out[NUM_BIDIR_PADS-1:37] = '0;
+    // Prog MISO
+    assign bidir_out[37] = prog_n ? 1'b0 : bidir_in[10];
+    assign bidir_oe[37] = prog_n ? 1'b0 : 1'b1;
+    assign bidir_ie[37] = 1'b0;
+    assign bidir_pu[37] = '0;
+    assign bidir_pd[37] = '0;
+
     assign bidir_ie[36:29] = '0;
     assign bidir_oe[36:29] = '1;
     assign bidir_pu[36:29] = '0;
@@ -94,6 +97,16 @@ module chip_core #(
     end
     endgenerate
 
+    wire use_hdmi_n = input_in[2];
+
+    // Clock
+    reg [4:0] clkdiv;
+    always @(posedge clk5x or negedge rst_n) begin
+        if (~rst_n) clkdiv <= 5'b11100;
+        else clkdiv <= {clkdiv[0], clkdiv[4:1]};
+    end
+    wire real_clk = use_hdmi_n ? clk : clkdiv[0];
+
     tt_um_MichaelBell_tinyQV tt(
         .ui_in(bidir_in[7:0]),
         .uo_out(bidir_out[24:16]),
@@ -101,8 +114,10 @@ module chip_core #(
         .uio_out(uio_out),
         .uio_oe(uio_oe),
         .ena(1'b1),
-        .clk(clk),
+        .clk(real_clk),
         .rst_n(rst_n),
+        .clk5x(clk5x),
+        .use_hdmi_n(use_hdmi_n),
         .uart_rx(input_in[0]),
         .uart_tx(bidir_out[25]),
         .uart_rts(bidir_out[26]),
