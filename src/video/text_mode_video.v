@@ -207,8 +207,8 @@ module tinyQV_text_mode_video (
         .dvi_n(dvi_n)
     );
 
-    assign video_out = use_hdmi_n ? {hsync_r, B[0], G[0], R[0], vsync_r, B[1], G[1], R[1]} :
-                                    {dvi_n[3], dvi_n[0], dvi_n[1], dvi_n[2], dvi_p[3], dvi_p[0], dvi_p[1], dvi_p[2]};
+    assign video_out = use_hdmi_n ? {hsync_r, vsync_r, B[0], B[1], G[0], G[1], R[0], R[1]} :
+                                    {dvi_n[3], dvi_p[3], dvi_n[0], dvi_p[0], dvi_n[1], dvi_p[1], dvi_n[2], dvi_p[2]};
 
     wire [7:0] data_out_imm =  reg_addr ? reg_data_out : 
             font_ram_addr_n ? text_out : font_out;
