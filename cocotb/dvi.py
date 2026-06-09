@@ -69,7 +69,7 @@ async def capture_frames(dut, n=1, capture_start=0, frame_num_start=0):
     image = Image.new("RGB", (640, 480))
 
     await ClockCycles(dut.clk, 24)
-    await ClockCycles(dut.clk5x, 1, False)
+    await ClockCycles(dut.clk5x, 2, False)
 
     # Test sync
     for i in range(525*n+5):

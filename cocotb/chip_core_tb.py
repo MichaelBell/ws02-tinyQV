@@ -133,6 +133,9 @@ def chip_core_runner():
         proj_path / "../ip/gf180mcu_ws_ip__shuttle_id/vh/gf180mcu_ws_ip__shuttle_id.v",
         proj_path / "../ip/gf180mcu_ws_ip__project_id/vh/gf180mcu_ws_ip__project_id.v",
 
+        proj_path / "../ip/ddr_driver/verilog/ddr_driver.v",
+        Path(pdk_root) / pdk / "libs.ref" / scl / "verilog" / f"{scl}.v",
+
         # Testbench
         "tb.v"
     ]
@@ -162,8 +165,8 @@ def chip_core_runner():
 
     runner.test(
         hdl_toplevel=hdl_toplevel,
-        test_module="test,vga,dvi",
-        #test_module="dvi",
+        #test_module="test,vga,dvi",
+        test_module="dvi",
         plusargs=plusargs,
         waves=True,
     )
