@@ -43,8 +43,8 @@ module tb_top #(
     assign prog_miso = bidir_PAD[29];
     assign bidir_PAD[32:30] = {prog_sck, prog_mosi, prog_cs};
 
-    reg clk_PAD;
-    reg rst_n_PAD;
+    wire clk_PAD;
+    wire rst_n_PAD;
 
     wire [3:0] analog_PAD;
 

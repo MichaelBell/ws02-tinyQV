@@ -51,7 +51,10 @@ def chip_core_runner():
         sources.append(src_path / "chip_top.sv")
         sources.append(src_path / "chip_core.sv")
         sources.append(src_path / "project.v")
-        sources.append(src_path / "text_ram.v")
+        sources.append(src_path / "video/text_ram.v")
+        sources.append(src_path / "video/text_mode_video.v")
+        sources.append(src_path / "video/hsync_generator.v")
+        sources.append(src_path / "video/font.v")
         sources.append(src_path / "tinyQV/cpu/tinyqv.v")
         sources.append(src_path / "tinyQV/cpu/alu.v")
         sources.append(src_path / "tinyQV/cpu/buffer.v")
@@ -105,6 +108,7 @@ def chip_core_runner():
         sources.append(src_path / "user_peripherals/vga_gfx/latch_config.v")
 
         includes.append(src_path / "user_peripherals/pwl_synth/")
+        includes.append(src_path / "video/")
         includes.append(src_path)
 
         defines.update({"SIM": True})
@@ -116,10 +120,13 @@ def chip_core_runner():
         # SRAM macros
         Path(pdk_root) / pdk / f"libs.ref/{sram}/verilog/{sram}__sram512x8m8wm1.v",
         Path(pdk_root) / pdk / f"libs.ref/{sram}/verilog/{sram}__sram1024x8m8wm1.v",
-                
+        
         # Custom IP
-        proj_path / "../ip/gf180mcu_ws_ip__id/vh/gf180mcu_ws_ip__id.v",
         proj_path / "../ip/gf180mcu_ws_ip__logo/vh/gf180mcu_ws_ip__logo.v",
+        proj_path / "../ip/gf180mcu_ws_ip__marker/vh/gf180mcu_ws_ip__marker.v",
+        proj_path / "../ip/gf180mcu_ws_ip__qrcode_id/vh/gf180mcu_ws_ip__qrcode_id.v",
+        proj_path / "../ip/gf180mcu_ws_ip__shuttle_id/vh/gf180mcu_ws_ip__shuttle_id.v",
+        proj_path / "../ip/gf180mcu_ws_ip__project_id/vh/gf180mcu_ws_ip__project_id.v",
 
         # Testbench
         "tb.v"
@@ -130,7 +137,7 @@ def chip_core_runner():
     if sim == "icarus":
         # For debugging
         # build_args = ["-Winfloop", "-pfileline=1"]
-        pass
+        build_args += ["-gno-strict-declaration"]
 
     if sim == "verilator":
         build_args = ["--timing", "--trace", "--trace-fst", "--trace-structs"]
