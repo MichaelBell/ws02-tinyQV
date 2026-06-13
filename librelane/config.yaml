@@ -122,6 +122,8 @@ IGNORE_DISCONNECTED_MODULES:
 - gf180mcu_ws_ip__project_id
 - gf180mcu_ws_ip__logo
 - gf180mcu_ws_ip__marker
+- r2r
+- analog_connect
 
 # Clock
 CLOCK_PORT: clk_PAD
@@ -131,8 +133,8 @@ CLOCK_NET:
 CLOCK_PERIOD: 38 # 26 MHz
 
 # Overfix hold violations
-PL_RESIZER_HOLD_SLACK_MARGIN: 0.35
-GRT_RESIZER_HOLD_SLACK_MARGIN: 0.3
+PL_RESIZER_HOLD_SLACK_MARGIN: 0.45
+GRT_RESIZER_HOLD_SLACK_MARGIN: 0.4
 
 # Ignore slow corner for resizer due to tight HDMI timing
 RSZ_CORNERS:
@@ -147,7 +149,7 @@ MAX_TRANSITION_CONSTRAINT: 1.8
 
 # Increase for more logic
 # on your die
-PL_TARGET_DENSITY_PCT: 60
+PL_TARGET_DENSITY_PCT: 62
 GRT_ALLOW_CONGESTION: true
 
 SYNTH_AUTONAME: True
@@ -181,6 +183,15 @@ PDN_CORE_RING_CONNECT_TO_PADS: True
 PDN_CORE_VERTICAL_LAYER: Metal4
 PDN_CORE_HORIZONTAL_LAYER: Metal3
 PDN_CORE_RING_CONNECT_TO_PAD_LAYERS: [Metal2]
+
+NON_DEFAULT_RULES:
+  # 3 times the width and spacing
+  NDR_0p6:
+    width: ["0.6"]
+    spacing: ["0.6"]
+
+DRT_ASSIGN_NDR:
+  "^dac_out$": NDR_0p6
 
 # Do not error on magic DRC violations
 # Note: Passing magic DRC is not required for the submission.

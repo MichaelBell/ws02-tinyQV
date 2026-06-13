@@ -371,15 +371,18 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
             dac_data <= data_to_write[7:0];
     end
 
+    wire [7:0] dac_buffered;
+    gf180mcu_as_sc_mcu7t3v3__buff_4 dac_buf [7:0] (.A(dac_data), .Y(dac_buffered));
+
     r2r i_r2r(
-        .b0(dac_data[0]),
-        .b1(dac_data[1]),
-        .b2(dac_data[2]),
-        .b3(dac_data[3]),
-        .b4(dac_data[4]),
-        .b5(dac_data[5]),
-        .b6(dac_data[6]),
-        .b7(dac_data[7]),
+        .b0(dac_buffered[0]),
+        .b1(dac_buffered[1]),
+        .b2(dac_buffered[2]),
+        .b3(dac_buffered[3]),
+        .b4(dac_buffered[4]),
+        .b5(dac_buffered[5]),
+        .b6(dac_buffered[6]),
+        .b7(dac_buffered[7]),
         .out(dac_out)
     );
 

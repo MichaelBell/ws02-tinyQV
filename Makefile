@@ -18,7 +18,7 @@ SCL = gf180mcu_as_sc_mcu7t3v3
 # Available PAD libraries:
 # gf180mcu_fd_io
 # gf180mcu_ocd_io
-PAD = gf180mcu_fd_io
+PAD = gf180mcu_ocd_io
 
 # Available SRAM macros:
 # gf180mcu_fd_ip_sram
