@@ -16,6 +16,8 @@ module tb #(
   // Wire up the inputs and outputs:
   reg clk;
   reg rst_n;
+  reg clk5x;
+  reg prog_clk;
 
   wire [NUM_INPUT_PADS-1:0] input_in;
   wire [NUM_INPUT_PADS-1:0] input_pu;
@@ -43,6 +45,7 @@ module tb #(
 
   reg [3:0] qspi_data_in;
   reg [2:0] latency_cfg;
+  reg use_latency_cfg_n;
 
   wire [3:0] qspi_data_out = {uio_out[5:4], uio_out[2:1]};
   wire [3:0] qspi_data_oe  = {uio_oe[5:4],  uio_oe[2:1]};
@@ -70,15 +73,19 @@ module tb #(
   wire debug_signal = bidir_out[28];
   reg uart_rx;
   assign ui_in = {uart_rx, game_data, game_clk, game_latch, mhz_clk, spi_miso, ui_in_base[1:0]};
-  assign bidir_in[15:0] = {2'b00, rst_n ? qspi_data_in[3:2] : {1'b0, latency_cfg[2]}, 1'b0, rst_n ? qspi_data_in[1:0] : latency_cfg[1:0], 1'b0, ui_in};
+  assign bidir_in[15:0] = {2'b00, use_latency_cfg_n ? qspi_data_in[3:2] : {1'b0, latency_cfg[2]}, 1'b0, use_latency_cfg_n ? qspi_data_in[1:0] : latency_cfg[1:0], 1'b0, ui_in};
 
-  assign input_in = {4'b0011, uart_rx};
+  reg use_hdmi_n;
+  assign input_in = {2'b00, use_hdmi_n, 1'b1, uart_rx};
 
   wire hsync = bidir_out[36];
-  wire vsync = bidir_out[32];
-  wire [1:0] red   = {bidir_out[29], bidir_out[33]};
-  wire [1:0] green = {bidir_out[30], bidir_out[34]};
-  wire [1:0] blue  = {bidir_out[31], bidir_out[35]};
+  wire vsync = bidir_out[35];
+  wire [1:0] red   = {bidir_out[29], bidir_out[30]};
+  wire [1:0] green = {bidir_out[31], bidir_out[32]};
+  wire [1:0] blue  = {bidir_out[33], bidir_out[34]};
+
+  wire [3:0] dvi_p = {bidir_out[35], bidir_out[29], bidir_out[31], bidir_out[33]};
+  wire [3:0] dvi_n = {bidir_out[36], bidir_out[30], bidir_out[32], bidir_out[34]};
 
 `ifdef USE_POWER_PINS
   wire VPWR = 1'b1;
@@ -100,6 +107,8 @@ module tb #(
 
       .clk(clk),
       .rst_n(rst_n),
+      .clk5x(clk5x),
+      .prog_clk(prog_clk),
 
       .input_in(input_in),
       .input_pu(input_pu),

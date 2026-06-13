@@ -17,7 +17,7 @@ reg [9:0] ring_ctr;
 
 always @ (posedge clk_x5) begin
 	if (!rst_n_x5) begin
-		ring_ctr <= 10'b11111_00000;
+		ring_ctr <= 10'b00111_11000;
 	end else begin
 		ring_ctr <= {ring_ctr[1:0], ring_ctr[9:2]};
 	end
