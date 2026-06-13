@@ -24,7 +24,7 @@ module font_8x16  (
     gf180mcu_ocd_ip_sram__sram1024x8m8wm1 i_sram (
         .CLK(clk),
         .CEN(!rstn),
-        .GWEN(data_write_n | char_read),
+        .GWEN(data_write_n),
         .WEN(8'h00),
         .A(font_ram_addr),
         .D(data_in),
@@ -37,18 +37,23 @@ module font_8x16  (
     always @(*) begin
         case ({char_in, y, x})
 `include "font/font_case.v"
-            default: line_data = font_ram_out;
+            default: line_data = 8'bx;
         endcase
     end
 
-    //reg [7:0] line_data_r;
     reg [7:0] char_data_r;
+    reg font_ram_read;
     always @(posedge clk) begin
-        if (char_read) char_data_r <= line_data;
-        //else line_data_r <= line_data;
+        font_ram_read <= 0;
+        if (char_read) begin
+            char_data_r <= line_data;
+            font_ram_read <= char_in[6:5] == 2'b00;
+        end else if (font_ram_read) begin
+            char_data_r <= font_ram_out;
+        end
     end
 
-    assign char_data = char_data_r;
+    assign char_data = font_ram_read ? font_ram_out : char_data_r;
     assign data_out = font_ram_out;
 
 endmodule

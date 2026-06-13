@@ -14,7 +14,7 @@
 // 0x800_00c0 - 0ff: Game pmod
 // 0x800_0100 - 2bf: 7 user peripherals (64 bytes each, word and halfword access supported, each has an interrupt)
 // 0x800_0400 - 43f: 4 simple peripherals (16 bytes each, byte access only)
-module tinyQV_peripherals #(parameter CLOCK_MHZ=64) (
+module tinyQV_peripherals #(parameter CLOCK_KHZ=25200) (
     input         clk,
     input         rst_n,
 
@@ -210,7 +210,7 @@ module tinyQV_peripherals #(parameter CLOCK_MHZ=64) (
     // --------------------------------------------------------------------- //
     // UART
 
-    tqvp_uart_wrapper #(.CLOCK_MHZ(CLOCK_MHZ)) i_uart (
+    tqvp_uart_wrapper #(.CLOCK_KHZ(CLOCK_KHZ)) i_uart (
         .clk(clk),
         .rst_n(rst_n_rebuf),
 

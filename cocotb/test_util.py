@@ -382,7 +382,7 @@ async def read_byte(dut, reg, expected_val):
       else:
           await Timer(5, "ns")
   assert dut.debug_uart_tx.value == 0
-  bit_time = 250
+  bit_time = 1000
   await Timer(bit_time / 2, "ns")
   assert dut.debug_uart_tx.value == 0
   for i in range(8):

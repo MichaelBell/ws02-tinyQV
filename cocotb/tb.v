@@ -72,7 +72,7 @@ module tb #(
   assign ui_in = {uart_rx, game_data, game_clk, game_latch, mhz_clk, spi_miso, ui_in_base[1:0]};
   assign bidir_in[15:0] = {2'b00, rst_n ? qspi_data_in[3:2] : {1'b0, latency_cfg[2]}, 1'b0, rst_n ? qspi_data_in[1:0] : latency_cfg[1:0], 1'b0, ui_in};
 
-  assign input_in = {3'b001, uart_rx};
+  assign input_in = {4'b0011, uart_rx};
 
   wire hsync = bidir_out[36];
   wire vsync = bidir_out[32];

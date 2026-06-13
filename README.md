@@ -1,3 +1,132 @@
+# TinyQV for Wafer Space run 2
+
+This is a version of TinyQV ported for a Wafer Space quarter size slot, incorporating a VGA/DVI text output, plus a number of peripherals from the Tiny Tapeout Risc-V competition.
+
+TinyQV is an RV32EC SoC.  It executes instructions directly from a QSPI flash (e.g. WS25Q128JVSIQ), and uses one or two QSPI APS6404 PSRAMs for RAM.
+
+It includes:
+
+* UART, [SPI](https://github.com/TinyTapeout/ttsky25a-tinyQV/blob/main/docs/user_peripherals/30_spi.md) and [PWM](https://github.com/TinyTapeout/ttsky25a-tinyQV/blob/main/docs/user_peripherals/21_matt_pwm.md) peripherals
+* Tiny Tapeout [Gamepad Pmod](https://tinytapeout.com/specs/pinouts/#game-controllers) support
+* [AY8913](https://github.com/TinyTapeout/ttsky25a-tinyQVb/blob/main/docs/user_peripherals/20_AY8913.md) and [PWL synth](https://github.com/TinyTapeout/ttsky25a-tinyQV/blob/main/docs/user_peripherals/33_pwl_synth.md) audio synthesizers
+* [Pulse TX](https://github.com/TinyTapeout/ttsky25a-tinyQV/blob/main/docs/user_peripherals/11_pulse_transmitter.md) programmable IO block
+* 256x120 [graphics](https://github.com/TinyTapeout/ttsky25a-tinyQV/blob/main/docs/user_peripherals/09_vga_gfx.md) (640x480 VGA signal using the Tiny Tapeout [VGA Pmod](https://tinytapeout.com/specs/pinouts/#vga-output))
+* [Universal decoder](https://github.com/TinyTapeout/ttsky25a-tinyQV/blob/main/docs/user_peripherals/23_ubcd.md)
+
+The design is intended to run at 3v3 at 25.2MHz.
+
+## Pinout
+
+
+
+| Pin      | Function |
+| -------  | -------- |
+| CLK      | Clock (nominally 25.2MHz) |
+| RST_N    | Reset (active low) |
+| CLK5x    | 5x Clock (126MHz) |
+| Input[0] | UART RX |
+| Input[1] | Flash programming mode (active low, pulled up) |
+| Input[2] | Use HDMI (active low, pulled up).  If active CLK5x must be supplied and CLK is unused |
+| Bidir[7:0] | Equivalent of Tiny Tapeout in[7:0] |
+| Bidir[8] | QSPI Flash CS |
+| Bidir[9] | QSPI D0 / MOSI |
+| Bidir[10] | QSPI D1 / MISO |
+| Bidir[11] | QSPI SCK |
+| Bidir[12] | QSPI D2 |
+| Bidir[13] | QSPI D3 |
+| Bidir[14] | QSPI RAM A CS |
+| Bidir[15] | QSPI RAM B CS / Audio |
+| Bidir[23:16] | Equivalent of Tiny Tapeout out[7:0] |
+| Bidir[24] | Audio output |
+| Bidir[25] | UART TX |
+| Bidir[26] | UART RTS |
+| Bidir[27] | Debug UART TX |
+| Bidir[28] | Debug signal |
+| Bidir[36:29] | Text console VGA/DVI output |
+| Bidir[37] | Flash programming MISO |
+| Input[3]  | Flash programming MOSI |
+| Input[4]  | Flash programming CS |
+| Prog_CLK  | Flash programming SCK |
+
+## Address map
+
+| Address range | Device |
+| ------------- | ------ |
+| 0x0000000 - 0x0FFFFFF | Flash |
+| 0x1000000 - 0x17FFFFF | RAM A |
+| 0x1800000 - 0x1FFFFFF | RAM B |
+| 0x8000000 - 0x8000033 | DEBUG  |
+| 0x8000040 - 0x800007F | GPIO |
+| 0x8000080 - 0x80000BF | UART  |
+| 0x80000C0 - 0x80001FF | User peripherals 3-7 |
+| 0x8000400 - 0x800043F | Simple user peripherals 0-3 |
+| 0x8800000 - 0x8800FFF | Text console |
+| 0xFFFFC00 - 0xFFFFDFF | Scratch RAM |
+| 0xFFFFF00 - 0xFFFFF07 | TIME |
+
+### DEBUG
+
+| Register | Address | Description |
+| -------- | ------- | ----------- |
+| ID       | 0x8000008 (R) | Instance of TinyQV: "WS02" |
+| SEL      | 0x800000C (R/W) | Bit 6 enables peripheral output on out6, otherwise out6 is used for debug UART TX (defaults to peripheral output). |
+| DEBUG_UART_DATA | 0x8000018 (W) | Transmits the byte on the debug UART |
+| STATUS   | 0x800001C (R) | Bit 0 indicates whether the debug UART TX is busy, bytes should not be written to the data register while this bit is set. |
+
+### TIME
+
+| Register | Address | Description |
+| -------- | ------- | ----------- |
+| MTIME_DIVIDER | 0x800002C | MTIME counts at clock / (MTIME_DIVIDER + 1).  Bits 0 and 1 are fixed at 1, so multiples of 4MHz are supported. |
+| MTIME    | 0xFFFFF00 (RW) | Get/set the 1MHz time count |
+| MTIMECMP | 0xFFFFF04 (RW) | Get/set the time to trigger the timer interrupt |
+
+This is a simple timer which follows the spirit of the Risc-V timer but using a 32-bit counter instead of 64 to save area.
+In this version the MTIME register is updated at 1/64th of the clock frequency (nominally 1MHz), and MTIMECMP is used to trigger an interrupt.
+If MTIME is after MTIMECMP (by less than 2^30 microseconds to deal with wrap), the timer interrupt is asserted.
+
+### GPIO
+
+| Register | Address | Description |
+| -------- | ------- | ----------- |
+| OUT | 0x8000040 (RW) | Control for out0-7 if the GPIO peripheral is selected |
+| IN  | 0x8000044 (R) | Reads the current state of in0-7 |
+| AUDIO_FUNC_SEL | 0x8000050 (RW) | Audio function select for audio pin |
+| FUNC_SEL | 0x8000060 - 0x800007F (RW) | Function select for out0-7 |
+
+| Function Select | Peripheral |
+| --------------- | ---------- |
+| 0               | Disabled   |
+| 1               | GPIO       |
+| 2               | UART       |
+| 3 - 7           | User peripheral 3-7 |
+| 16 - 19         | User byte peripheral 0-3 |
+
+| Audio function select | Peripheral |
+| --------------------- | ---------- |
+| 0                     | PWL Synth out 7 |
+| 1                     | Pulse Transmitter out 7 |
+| 2                     | AY8913 out 0 |
+| 3                     | Matt PWM out 7 |
+
+If audio function select bit 2 is high audio is also presented on `uio[7]` (instead of RAM B CS).
+
+### UART
+
+| Register | Address | Description |
+| -------- | ------- | ----------- |
+| TX_DATA | 0x8000080 (W) | Transmits the byte on the UART |
+| RX_DATA | 0x8000080 (R) | Reads any received byte |
+| TX_BUSY | 0x8000084 (R) | Bit 0 indicates whether the UART TX is busy, bytes should not be written to the data register while this bit is set. Bit 1 indicates whether a received byte is available to be read. |
+| DIVIDER | 0x8000088 (R/W) | 13 bit clock divider to set the UART baud rate |
+| RX_SELECT | 0x800008C (R/W) | Selects UART RX pin |
+
+| UART RX Select | Pin |
+| -------------- | --- |
+| 0 | `ui_in[7]` (default) |
+| 1 | `ui_in[3]` |
+| 2-3 | `uart_rx` (dedicated pin) |
+
 # gf180mcu Project Template
 
 Project template for wafer.space MPW runs using the gf180mcu PDK.
