@@ -21,7 +21,8 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
     output wire       uart_rts,
     output wire       debug_uart_txd,
     output wire       debug_signal,
-    output wire [7:0] video_out
+    output wire [7:0] video_out,
+    inout wire       dac_out
 );
 
     // Address to peripheral map
@@ -32,6 +33,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
     localparam PERI_DEBUG_UART_STATUS = 4'h7;
     localparam PERI_TIME_LIMIT = 4'hB;
     localparam PERI_DEBUG = 4'hC;
+    localparam PERI_DAC = 4'hD;
     localparam PERI_VIDEO = 4'hE;
     localparam PERI_USER = 4'hF;
 
@@ -125,6 +127,9 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
         ui_in_sync <= ui_in_sync0;
         uart_rx_sync <= uart_rx_sync0;
     end
+
+    // DAC
+    reg [7:0] dac_data;
 
     // Text console interface
     wire video_interrupt;
@@ -267,6 +272,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
             PERI_GPIO_OUT_SEL:data_from_read = {25'h0, gpio_out_sel, 6'h0};
             PERI_DEBUG_UART_STATUS: data_from_read = {31'h0, debug_uart_tx_busy};
             PERI_TIME_LIMIT:  data_from_read = {25'h0, time_limit, 2'b11};
+            PERI_DAC:         data_from_read = {24'h0, dac_data};
             PERI_VIDEO:       data_from_read = {24'h0, video_data_out};
             PERI_USER:        data_from_read = peri_data_out;
             default:          data_from_read = 32'hFFFF_FFFF;
@@ -356,6 +362,25 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
         .data_read_complete(read_complete),
         .interrupt(video_interrupt),
         .video_out(video_out)
+    );
+
+    always @(posedge clk) begin
+        if (!rst_reg_n)
+            dac_data <= '0;
+        else if (write_n != 2'b11 && connect_peripheral == PERI_DAC)
+            dac_data <= data_to_write[7:0];
+    end
+
+    r2r i_r2r(
+        .b0(dac_data[0]),
+        .b1(dac_data[1]),
+        .b2(dac_data[2]),
+        .b3(dac_data[3]),
+        .b4(dac_data[4]),
+        .b5(dac_data[5]),
+        .b6(dac_data[6]),
+        .b7(dac_data[7]),
+        .out(dac_out)
     );
 
     // List all unused inputs to prevent warnings
