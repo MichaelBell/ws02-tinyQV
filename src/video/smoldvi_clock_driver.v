@@ -23,7 +23,10 @@ always @ (posedge clk_x5) begin
 	end
 end
 
-assign qp = clk_x5 ? ring_ctr[0] : ring_ctr[1];
-assign qn = clk_x5 ? ring_ctr[5] : ring_ctr[6];
+ddr_driver ddr (
+	.clk(clk_x5),
+	.data(ring_ctr[1:0]),
+	.q({qn,qp})
+);
 
 endmodule

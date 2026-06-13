@@ -1,0 +1,101 @@
+VERSION 5.7 ;
+  NOWIREEXTENSIONATPIN ON ;
+  DIVIDERCHAR "/" ;
+  BUSBITCHARS "[]" ;
+MACRO ddr_driver
+  CLASS BLOCK ;
+  FOREIGN ddr_driver ;
+  ORIGIN 0.000 0.000 ;
+  SIZE 32.555 BY 33.675 ;
+  PIN VDD
+    DIRECTION INOUT ;
+    USE POWER ;
+    PORT
+      LAYER Metal4 ;
+        RECT 18.880 3.620 20.480 27.740 ;
+    END
+  END VDD
+  PIN VSS
+    DIRECTION INOUT ;
+    USE GROUND ;
+    PORT
+      LAYER Metal4 ;
+        RECT 22.180 3.620 23.780 27.740 ;
+    END
+  END VSS
+  PIN clk
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 2.931600 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 5.600 33.115 6.160 33.675 ;
+    END
+  END clk
+  PIN data[0]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 1.999200 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 25.760 33.115 26.320 33.675 ;
+    END
+  END data[0]
+  PIN data[1]
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    ANTENNAGATEAREA 1.999200 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 15.680 33.115 16.240 33.675 ;
+    END
+  END data[1]
+  PIN q[0]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 2.522800 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 31.995 7.840 32.555 8.400 ;
+    END
+  END q[0]
+  PIN q[1]
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    ANTENNADIFFAREA 2.522800 ;
+    PORT
+      LAYER Metal3 ;
+        RECT 31.995 24.640 32.555 25.200 ;
+    END
+  END q[1]
+  OBS
+      LAYER Pwell ;
+        RECT 2.930 25.670 29.550 27.870 ;
+      LAYER Nwell ;
+        RECT 2.930 21.370 29.550 25.670 ;
+      LAYER Pwell ;
+        RECT 2.930 17.830 29.550 21.370 ;
+      LAYER Nwell ;
+        RECT 2.930 13.530 29.550 17.830 ;
+      LAYER Pwell ;
+        RECT 2.930 9.990 29.550 13.530 ;
+      LAYER Nwell ;
+        RECT 2.930 5.690 29.550 9.990 ;
+      LAYER Pwell ;
+        RECT 2.930 3.490 29.550 5.690 ;
+      LAYER Metal1 ;
+        RECT 3.360 3.620 29.120 27.740 ;
+      LAYER Metal2 ;
+        RECT 6.460 32.815 15.380 33.115 ;
+        RECT 16.540 32.815 25.460 33.115 ;
+        RECT 5.740 3.730 26.180 32.815 ;
+      LAYER Metal3 ;
+        RECT 5.690 25.500 31.995 27.580 ;
+        RECT 5.690 24.340 31.695 25.500 ;
+        RECT 5.690 8.700 31.995 24.340 ;
+        RECT 5.690 7.540 31.695 8.700 ;
+        RECT 5.690 3.780 31.995 7.540 ;
+  END
+END ddr_driver
+END LIBRARY
+
