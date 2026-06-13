@@ -30,6 +30,9 @@ slot = os.getenv("SLOT", "1x1")
 
 hdl_toplevel = "tb_top"
 
+if not os.path.exists("output"):
+    os.mkdir("output")
+
 async def set_defaults(dut):
     dut.uart_rx.value = 1
     dut.ui_in.value = 0x80
@@ -508,7 +511,7 @@ async def capture_vga_frames(dut, n=1, capture_start=0, frame_num_start=0):
             await ClockCycles(dut.clk_PAD, 1)
 
         if i % 525 == 480:
-            image.save(f"output/frame{frame_num_start + (i // 525)}.png")
+            image.save(f"output/frame_top{frame_num_start + (i // 525)}.png")
 
 
 
@@ -896,6 +899,8 @@ async def test_vga_text(dut):
     await send_instr(dut, InstructionSB(a4, x0, -0x600).encode())
     await send_instr(dut, InstructionSB(a4, x1, -0x600).encode())
 
+    capture_task = cocotb.start_soon(capture_vga_frames(dut, 2, 100))
+
     # Setup custom font
     for i in range(16):
         for j in range(16):
@@ -927,13 +932,9 @@ async def test_vga_text(dut):
         await send_instr(dut, InstructionADDI(x1, x0, i & 0xff).encode())
         await send_instr(dut, InstructionSB(a4, x1, i-0x400).encode())
 
-    # Bounce video enable to get known sync
-    await send_instr(dut, InstructionSB(a4, x0, 0x600).encode())
-    await send_instr(dut, InstructionSB(a4, x1, 0x600).encode())
-
     await start_nops(dut)
 
-    await capture_vga_frames(dut)
+    await capture_task
     await stop_nops()
 
 
