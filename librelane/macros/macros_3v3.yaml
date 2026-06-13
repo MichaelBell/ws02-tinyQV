@@ -120,10 +120,13 @@ MACROS:
       # Make sure to specify the SRAMs in pdn_cfg.tcl
       i_chip_core.i_text.i_sram0:
         location: [450, 445]
-        orientation: N
+        orientation: S
       i_chip_core.i_text.i_sram1:
         location: [760, 445]
         orientation: S
+      i_chip_core.i_font.i_sram:
+        location: [1185, 1250]
+        orientation: N
 
 # This is an alternative method compared to
 # specifying the power connections in the RTL
@@ -132,3 +135,4 @@ PDN_MACRO_CONNECTIONS:
 - "i_chip_core.i_text.i_sram0 VDD VSS VDD VSS"
 - "i_chip_core.i_text.i_sram1 VDD VSS VDD VSS"
 - "i_chip_core.i_text.i_sram2 VDD VSS VDD VSS"
+- "i_chip_core.i_font.i_sram VDD VSS VDD VSS"
