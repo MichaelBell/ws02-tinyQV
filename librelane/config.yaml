@@ -38,6 +38,11 @@ VERILOG_FILES:
 - dir::../src/video/font.v
 - dir::../src/video/hsync_generator.v
 - dir::../src/video/text_mode_video.v
+- dir::../src/video/smoldvi.v
+- dir::../src/video/smoldvi_serialiser.v
+- dir::../src/video/smoldvi_fast_gearbox.v
+- dir::../src/video/smoldvi_clock_driver.v
+- dir::../src/video/simple_tmds_encode.v
 - dir::../src/tinyQV/cpu/tinyqv.v
 - dir::../src/tinyQV/cpu/alu.v
 - dir::../src/tinyQV/cpu/buffer.v
@@ -120,12 +125,23 @@ IGNORE_DISCONNECTED_MODULES:
 
 # Clock
 CLOCK_PORT: clk_PAD
-CLOCK_NET: clk_pad/Y
+CLOCK_NET:
+- i_chip_core.real_clk_gf180mcu_as_sc_mcu7t3v3__mux2_2_Y/Y
+- clk5x_pad/Y
 CLOCK_PERIOD: 38 # 26 MHz
 
 # Overfix hold violations
 PL_RESIZER_HOLD_SLACK_MARGIN: 0.35
 GRT_RESIZER_HOLD_SLACK_MARGIN: 0.3
+
+# Ignore slow corner for resizer due to tight HDMI timing
+RSZ_CORNERS:
+- nom_tt_025C_3v30
+- nom_ff_n40C_3v60
+- min_tt_025C_3v30
+- min_ff_n40C_3v60
+- max_tt_025C_3v30
+- max_ff_n40C_3v60
 
 MAX_TRANSITION_CONSTRAINT: 1.8
 
