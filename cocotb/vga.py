@@ -54,7 +54,7 @@ async def capture_frames(dut, n=1, capture_start=0, frame_num_start=0):
 
 
 @cocotb.test()
-async def test_frames(dut):
+async def test_vga_frames(dut):
     dut._log.info("Start")
 
     # Set the clock period to 39.68 ns (~25.2MHz)
@@ -78,7 +78,7 @@ async def test_frames(dut):
     await send_instr(dut, InstructionSB(a4, x0, 0x600).encode())
     await send_instr(dut, InstructionSB(a4, x1, 0x600).encode())
 
-    capture_task = cocotb.start_soon(capture_frames(dut, 2, 100))
+    capture_task = cocotb.start_soon(capture_frames(dut, 2, 16))
 
     RAM_SIZE = 2560
     RAM = [0]*RAM_SIZE
