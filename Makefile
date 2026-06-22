@@ -13,12 +13,12 @@ PDK_COMMIT ?= b344c97eacc2aaf8e14ae7e43e2e9dc0871de2c0
 # gf180mcu_fd_sc_mcu9t5v0
 # gf180mcu_osu_sc_gp9t3v3 (broken)
 # gf180mcu_osu_sc_gp12t3v3 (broken)
-SCL = gf180mcu_fd_sc_mcu7t5v0
+SCL = gf180mcu_as_sc_mcu7t3v3
 
 # Available PAD libraries:
 # gf180mcu_fd_io
 # gf180mcu_ocd_io
-PAD = gf180mcu_ocd_io
+PAD = gf180mcu_fd_io
 
 # Available SRAM macros:
 # gf180mcu_fd_ip_sram

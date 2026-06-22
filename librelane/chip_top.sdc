@@ -88,7 +88,7 @@ puts "\[INFO] Setting timing derate to: $::env(TIME_DERATING_CONSTRAINT)%"
 set_timing_derate -early [expr 1-[expr $::env(TIME_DERATING_CONSTRAINT) / 100]]
 set_timing_derate -late [expr 1+[expr $::env(TIME_DERATING_CONSTRAINT) / 100]]
 
-#set rst_pins {i_chip_core.tt.i_peripherals.rst_n_rebuf_negedge_gf180mcu_fd_sc_mcu7t5v0__dffnq_1_Q/Q i_chip_core.tt.i_peripherals.rst_n_rebuf_gf180mcu_fd_sc_mcu7t5v0__dffq_1_Q/Q}
+#set rst_pins {i_chip_core.tt.i_peripherals.rst_n_rebuf_gf180mcu_as_sc_mcu7t3v3__dfxtp_2_Q/Q i_chip_core.tt.i_peripherals.rst_n_rebuf_negedge_gf180mcu_as_sc_mcu7t3v3__dfxtn_2_Q/Q}
 
 if { [info exists ::env(OPENLANE_SDC_IDEAL_CLOCKS)] && $::env(OPENLANE_SDC_IDEAL_CLOCKS) } {
     unset_propagated_clock [all_clocks]
@@ -98,4 +98,4 @@ if { [info exists ::env(OPENLANE_SDC_IDEAL_CLOCKS)] && $::env(OPENLANE_SDC_IDEAL
 }
 
 # Ignore switch of setup/ctrl mux on QSPI output paths
-set_false_path -from *.tt.rst_reg_n_gf180mcu_fd_sc_mcu7t5v0__dffnq_1_Q -to $clk_core_inout_ports
+set_false_path -from *.tt.rst_reg_n_gf180mcu_as_sc_mcu7t3v3__dfxtn_2_Q -to $clk_core_inout_ports
