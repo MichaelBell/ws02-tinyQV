@@ -34,8 +34,10 @@ VERILOG_FILES:
 - dir::../src/chip_top.sv
 - dir::../src/chip_core.sv
 - dir::../src/project.v
-- dir::../src/text_ram.v
-- dir::../src/font.v
+- dir::../src/video/text_ram.v
+- dir::../src/video/font.v
+- dir::../src/video/hsync_generator.v
+- dir::../src/video/text_mode_video.v
 - dir::../src/tinyQV/cpu/tinyqv.v
 - dir::../src/tinyQV/cpu/alu.v
 - dir::../src/tinyQV/cpu/buffer.v
