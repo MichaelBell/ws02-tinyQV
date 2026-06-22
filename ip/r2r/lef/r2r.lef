@@ -6,7 +6,7 @@ MACRO r2r
   CLASS BLOCK ;
   FOREIGN r2r ;
   ORIGIN 0.000 0.000 ;
-  SIZE 66.800 BY 55.850 ;
+  SIZE 66.800 BY 55.880 ;
   PIN b0
     PORT
       LAYER Metal2 ;
