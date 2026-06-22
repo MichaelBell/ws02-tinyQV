@@ -111,6 +111,13 @@ jobs:
         with:
           name: ${{ matrix.slot }}_image
           path: final/render/*.png
+      - name: Upload logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.slot }}_gds_logs
+          path: |
+            librelane/runs/*
       - name: Run GL simulation
         if: success() || failure()
         run: |
@@ -118,3 +125,10 @@ jobs:
           # cocotb also returns 0 upon failure
           # check the simulation results
           ! grep failure cocotb/sim_build/results.xml
+      - name: Upload test output
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.slot }}_gl_frames
+          path: |
+            cocotb/sim_build/output/*
