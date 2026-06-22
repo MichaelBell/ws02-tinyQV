@@ -74,9 +74,10 @@ module tinyQV_text_mode_video (
     wire [4:0] row_addr = (pix_y[9] ? 5'h1f : pix_y[8:4]) + scroll_offset;
     wire [11:0] text_addr_y = row_addr * 12'd80;
     wire end_of_row = pix_x[9:7] >= 3'b101;
-    wire end_of_text_row = end_of_row && pix_y[3:0] == 4'b1111;
+    wire end_of_text_row = end_of_row && (pix_y[3:0] == 4'b1111 || pix_y[9]);
     wire [6:0] text_addr_x = end_of_row ? (end_of_text_row ? 7'd80 : 7'd0) : pix_x[9:3] + {6'b0, pix_x[2]};
-    wire [11:0] text_addr = text_addr_y + {5'b0, text_addr_x};
+    wire [11:0] text_addr_unwrapped = text_addr_y + {5'b0, text_addr_x};
+    wire [11:0] text_addr = {(text_addr_unwrapped[11] & text_addr_unwrapped[9]) ? 3'b000 : text_addr_unwrapped[11:9], text_addr_unwrapped[8:0]};
     text_ram i_text(
         .clk(clk),
         .rstn(rst_n_and_en),
@@ -96,7 +97,7 @@ module tinyQV_text_mode_video (
         .data_out(font_out),
         .char_read(font_read),
         .char_in(text_out[6:0]),
-        .y(pix_y[3:0] + {3'b0, end_of_row}),
+        .y((pix_y[3:0] + {3'b0, end_of_row}) & {4{~pix_y[9]}}),
         .x(~pix_x[2]),
         .char_data(char_data)
     );
