@@ -61,7 +61,7 @@ module chip_top #(
     inout  wire [NUM_INPUT_PADS-1:0] input_PAD,
     inout  wire [NUM_BIDIR_PADS-1:0] bidir_PAD,
     
-    inout  wire analog_PAD
+    inout  wire analog_ASIG
 );
 
     wire clk_PAD2CORE;
@@ -81,6 +81,8 @@ module chip_top #(
     wire [NUM_BIDIR_PADS-1:0] bidir_CORE2PAD_IE;
     wire [NUM_BIDIR_PADS-1:0] bidir_CORE2PAD_PU;
     wire [NUM_BIDIR_PADS-1:0] bidir_CORE2PAD_PD;
+
+    wire dac_out;
 
     // In the foundry pads, the I/O and
     // core voltage domains are shorted
@@ -257,7 +259,12 @@ module chip_top #(
         .VDD    (VDD),
         .VSS    (VSS),
         `endif
-        .ASIG5V (analog_PAD)
+        .ASIG5V (analog_ASIG)
+    );
+
+    analog_connect dac_connect(
+        .asig(analog_ASIG),
+        .pad(dac_out)
     );
 
     // Core design
@@ -290,7 +297,7 @@ module chip_top #(
         .bidir_pu   (bidir_CORE2PAD_PU),
         .bidir_pd   (bidir_CORE2PAD_PD),
         
-        .dac_out    (analog_PAD)
+        .dac_out    (dac_out)
     );
     
     // Do not remove, necessary for tapeout

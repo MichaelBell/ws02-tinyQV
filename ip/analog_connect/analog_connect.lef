@@ -1,0 +1,32 @@
+VERSION 5.7 ;
+  NOWIREEXTENSIONATPIN ON ;
+  DIVIDERCHAR "/" ;
+  BUSBITCHARS "[]" ;
+MACRO analog_connect
+  CLASS BLOCK ;
+  FOREIGN analog_connect ;
+  ORIGIN 0.000 0.000 ;
+  SIZE 44.320 BY 1.000 ;
+  PIN asig
+    DIRECTION INOUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER Metal2 ;
+        RECT 0.000 0.000 44.320 0.280 ;
+    END
+  END asig
+  PIN pad
+    DIRECTION INOUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER Metal3 ;
+        RECT 0.000 0.280 44.320 1.000 ;
+    END
+  END pad
+  OBS
+      LAYER Metal2 ;
+        RECT 0.000 0.280 44.320 1.000 ;
+  END
+END analog_connect
+END LIBRARY
+
