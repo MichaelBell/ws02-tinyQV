@@ -38,7 +38,7 @@ module tinyQV_text_mode_video (
     output [7:0]  video_out
 );
 
-    wire text_ram_addr_n = addr_in[11:9] > 3'b101;
+    wire text_ram_addr_n = addr_in[11:9] >= 3'b101;
     wire font_ram_addr_n = addr_in[11:10] != 2'b11;
 
     // VGA signals
@@ -67,7 +67,11 @@ module tinyQV_text_mode_video (
     wire [7:0] font_out;
     wire [7:0] char_data;
     wire text_read = pix_x[1:0] == 2'b10;
-    wire [11:0] text_addr = pix_y[8:4] * 12'd80 + pix_x[8:3];
+    wire [11:0] text_addr_y = pix_y[8:4] * 12'd80;
+    wire end_of_row = pix_x[9:7] >= 3'b101;
+    wire end_of_text_row = end_of_row && pix_y[3:0] == 4'b1111;
+    wire [6:0] text_addr_x = end_of_row ? (end_of_text_row ? 7'd80 : 7'd0) : pix_x[9:3] + pix_x[2];
+    wire [11:0] text_addr = text_addr_y + text_addr_x;
     text_ram i_text(
         .clk(clk),
         .rstn(rst_n),
@@ -87,16 +91,14 @@ module tinyQV_text_mode_video (
         .data_out(font_out),
         .char_read(font_read),
         .char_in(text_out[6:0]),
-        .y(pix_y[3:0]),
-        .x(pix_x[2]),
+        .y(pix_y[3:0] + end_of_row),
+        .x(~pix_x[2]),
         .char_data(char_data)
     );
 
     wire data_txn = !data_read_n || !data_write_n;
-    //reg data_txn_r;
     reg data_ready_r;
     always @(posedge clk) begin
-        //data_txn_r <= data_txn;
         data_ready_r <= !pix_x[1] && data_txn;
     end
 
