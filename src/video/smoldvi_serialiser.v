@@ -48,14 +48,15 @@ smoldvi_fast_gearbox #(
 );
 
 reg [1:0] data_x5_delay;
-reg [1:0] data_x5_ndelay;
 
 always @ (posedge clk_x5) begin
 	data_x5_delay <= data_x5;
-	data_x5_ndelay <= ~data_x5;
 end
 
-assign qp = clk_x5 ? data_x5_delay[0] : data_x5_delay[1];
-assign qn = clk_x5 ? data_x5_ndelay[0] : data_x5_ndelay[1];
+ddr_driver ddr (
+	.clk(clk_x5),
+	.data(data_x5_delay),
+	.q({qn,qp})
+);
 
 endmodule
