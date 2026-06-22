@@ -22,7 +22,7 @@ module text_ram #(parameter ADDR_BITS=12) (
         .CLK(clk),
         .CEN(!rstn),
         .GWEN(write_enable_n[0]),
-        .WEN(8'hff),
+        .WEN(8'h00),
         .A(data_addr[9:0]),
         .D(data_in),
         .Q(data_out0)
@@ -31,7 +31,7 @@ module text_ram #(parameter ADDR_BITS=12) (
         .CLK(clk),
         .CEN(!rstn),
         .GWEN(write_enable_n[1]),
-        .WEN(8'hff),
+        .WEN(8'h00),
         .A(data_addr[9:0]),
         .D(data_in),
         .Q(data_out1)
@@ -40,7 +40,7 @@ module text_ram #(parameter ADDR_BITS=12) (
         .CLK(clk),
         .CEN(!rstn),
         .GWEN(write_enable_n[2]),
-        .WEN(8'hff),
+        .WEN(8'h00),
         .A(data_addr[8:0]),
         .D(data_in),
         .Q(data_out2)
@@ -53,6 +53,11 @@ module text_ram #(parameter ADDR_BITS=12) (
             assign write_enable_n[i] = data_write_n || (i != data_addr[11:10]);
         end
     endgenerate
+
+    //always @(posedge clk) begin
+    //    data_out <= ram_select_n[0] ? data_out0 :
+    //                ram_select_n[1] ? data_out1 : data_out2;
+    //end
 
     assign data_out = ram_select_n[0] ? data_out0 :
                       ram_select_n[1] ? data_out1 : data_out2;

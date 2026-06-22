@@ -34,6 +34,44 @@
             nix-eda.overlays.default
             devshell.overlays.default
             librelane.overlays.default
+
+            (final: prev: {
+              iverilog = prev.iverilog.overrideAttrs (old: {
+                version = "fix-decl-after-use";
+
+                src = prev.fetchFromGitHub {
+                  owner = "MichaelBell";
+                  repo = "iverilog";
+
+                  # commit containing the fix you need
+                  rev = "fbac730f5062ccee37345d87a7995b7594d52cd8";
+
+                  hash = "sha256-Jd77iW5sJarIrcfkKySUMgXMDZhH5vf/XW9YqpuQ+94=";
+                };
+              });
+              python3 = prev.python3.override {
+                packageOverrides = pyFinal: pyPrev: {
+                  riscvmodel = pyPrev.buildPythonPackage rec {
+                    pname = "riscv-model";
+                    version = "0.6.6";
+
+                    src = pyPrev.fetchPypi {
+                      inherit pname version;
+                      hash = "sha256-3/8DW3XtNt4zqZ+V8QmGl74wjUxxYamUB7gt8i/VTWk=";
+                    };
+
+                    format = "setuptools";
+
+                    nativeBuildInputs = with pyPrev; [
+                      setuptools
+                      setuptools-scm
+                    ];
+
+                    doCheck = false;
+                  };
+                };
+              };
+            })
           ];
         }
       );
@@ -69,6 +107,7 @@
               ps: with ps; [
                 # Verification
                 cocotb
+                riscvmodel
 
                 # For KLayout Python DRC runner
                 docopt

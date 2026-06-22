@@ -25,7 +25,7 @@ module font_8x16  (
         .CLK(clk),
         .CEN(!rstn),
         .GWEN(data_write_n | char_read),
-        .WEN(8'hff),
+        .WEN(8'h00),
         .A(font_ram_addr),
         .D(data_in),
         .Q(font_ram_out)
@@ -41,14 +41,14 @@ module font_8x16  (
         endcase
     end
 
-    reg [7:0] line_data_r;
+    //reg [7:0] line_data_r;
     reg [7:0] char_data_r;
     always @(posedge clk) begin
         if (char_read) char_data_r <= line_data;
-        else line_data_r <= line_data;
+        //else line_data_r <= line_data;
     end
 
     assign char_data = char_data_r;
-    assign data_out = line_data_r;
+    assign data_out = font_ram_out;
 
 endmodule
