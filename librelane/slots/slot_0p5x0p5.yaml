@@ -70,7 +70,7 @@ PAD_WEST: [
     prog_clk_pad,
     "inputs\\[4\\].pad",
     "inputs\\[3\\].pad",
-    "analog\\[0\\].pad",
+    "dac_pad",
 
     "bidir\\[28\\].pad",
     "bidir\\[27\\].pad",

@@ -61,7 +61,7 @@ module chip_top #(
     inout  wire [NUM_INPUT_PADS-1:0] input_PAD,
     inout  wire [NUM_BIDIR_PADS-1:0] bidir_PAD,
     
-    inout  wire [NUM_ANALOG_PADS-1:0] analog_PAD
+    inout  wire analog_PAD
 );
 
     wire clk_PAD2CORE;
@@ -249,20 +249,16 @@ module chip_top #(
     end
     endgenerate
 
-    generate
-    for (genvar i=0; i<NUM_ANALOG_PADS; i++) begin : analog
-        (* keep *)
-        `gf180mcu_xxx_io__asig_5p0 pad (
-            `ifdef USE_POWER_PINS
-            .DVDD   (DVDD),
-            .DVSS   (DVSS),
-            .VDD    (VDD),
-            .VSS    (VSS),
-            `endif
-            .ASIG5V (analog_PAD[i])
-        );
-    end
-    endgenerate
+    (* keep *)
+    `gf180mcu_xxx_io__asig_5p0 dac_pad (
+        `ifdef USE_POWER_PINS
+        .DVDD   (DVDD),
+        .DVSS   (DVSS),
+        .VDD    (VDD),
+        .VSS    (VSS),
+        `endif
+        .ASIG5V (analog_PAD)
+    );
 
     // Core design
 
@@ -294,7 +290,7 @@ module chip_top #(
         .bidir_pu   (bidir_CORE2PAD_PU),
         .bidir_pd   (bidir_CORE2PAD_PD),
         
-        .analog     (analog_PAD)
+        .dac_out    (analog_PAD)
     );
     
     // Do not remove, necessary for tapeout
