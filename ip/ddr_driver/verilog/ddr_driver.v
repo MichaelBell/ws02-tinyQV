@@ -1,6 +1,10 @@
 `default_nettype    none
 
 module ddr_driver (
+    `ifdef USE_POWER_PINS
+    inout  wire VDD,
+    inout  wire VSS,
+    `endif    
     input wire          clk,
     input wire  [1:0]   data,
     output wire [1:0]   q
