@@ -45,7 +45,7 @@ int main(void) {
 }
 #else
 int main(void) {
-    for (int c = 0x20; c < 0x7f; ++c) {
+    for (int c = 0x20; c <= 0x7f; ++c) {
         for (int y = 0; y < 16; ++y) {
             uint32_t glyph = render_char_line(c, y);
             uint16_t glyph_swap = 

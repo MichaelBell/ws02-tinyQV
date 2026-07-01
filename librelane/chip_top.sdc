@@ -24,7 +24,8 @@ if { $::env(CLOCK_PORT) == $::env(CLOCK_NET) } {
 }
 
 puts "\[INFO] Using clock $clock_port…"
-create_clock {*}$port_args -name $clock_port -period $::env(CLOCK_PERIOD)
+create_clock {*}$port_args -name clk_PAD -period $::env(CLOCK_PERIOD)
+create_clock [get_pins clk5x_pad/Y] -name fast_clk -period [expr $::env(CLOCK_PERIOD) * 0.2]
 
 set input_setup_delay_value [expr $::env(CLOCK_PERIOD) * 0.6]
 set input_hold_delay_value [expr $::env(CLOCK_PERIOD) * 0.25]
@@ -63,15 +64,23 @@ set_output_delay -clock $clocks -min 3 {bidir_PAD[16] bidir_PAD[17] bidir_PAD[18
 set_output_delay -clock $clocks -max 1 {bidir_PAD[16] bidir_PAD[17] bidir_PAD[18] bidir_PAD[19] bidir_PAD[20] bidir_PAD[21] bidir_PAD[22] bidir_PAD[23] bidir_PAD[24] bidir_PAD[25] bidir_PAD[26] bidir_PAD[27] bidir_PAD[28] bidir_PAD[29]}
 
 # Input-only pads
-set clk_core_input_ports [get_ports { 
-    input_PAD[*]
-}] 
-
-set_input_delay -min $input_hold_delay_value -clock $clocks $clk_core_input_ports
-set_input_delay -max $input_setup_delay_value -clock $clocks $clk_core_input_ports
+set_input_delay -min $input_hold_delay_value -clock $clocks input_PAD[0]
+set_input_delay -max $input_setup_delay_value -clock $clocks input_PAD[0]
 
 # Reset
 set_input_delay 2 -clock $clocks {rst_n_PAD}
+
+# Prog - basically ignore timing
+set_input_delay 2 -clock $clocks {input_PAD[1]}
+set_output_delay 2 -clock $clocks {bidir_PAD[37]}
+set_input_delay 2 -clock $clocks {input_PAD[3]}
+set_input_delay 2 -clock $clocks {input_PAD[4]}
+set_input_delay 2 -clock $clocks {prog_clk_PAD}
+
+# HDMI
+set_input_delay 0 -clock fast_clk {input_PAD[2]}
+set_output_delay -clock fast_clk -min 3 {bidir_PAD[29] bidir_PAD[30] bidir_PAD[31] bidir_PAD[32] bidir_PAD[33] bidir_PAD[34] bidir_PAD[35] bidir_PAD[36]}
+set_output_delay -clock fast_clk -max -1 {bidir_PAD[29] bidir_PAD[30] bidir_PAD[31] bidir_PAD[32] bidir_PAD[33] bidir_PAD[34] bidir_PAD[35] bidir_PAD[36]}
 
 # Output load
 set cap_load [expr $::env(OUTPUT_CAP_LOAD) / 1000.0]
