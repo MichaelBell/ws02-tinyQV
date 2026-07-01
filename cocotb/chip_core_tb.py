@@ -15,6 +15,8 @@ sim = os.getenv("SIM", "icarus")
 pdk_root = os.getenv("PDK_ROOT", Path("~/.ciel").expanduser())
 pdk = os.getenv("PDK", "gf180mcuD")
 scl = os.getenv("SCL", "gf180mcu_fd_sc_mcu7t5v0")
+pad = os.getenv("PAD", "gf180mcu_fd_io")
+sram = os.getenv("SRAM", "gf180mcu_fd_ip_sram")
 gl = os.getenv("GL", False)
 slot = os.getenv("SLOT", "1x1")
 
@@ -28,6 +30,12 @@ def chip_core_runner():
     sources = []
     defines = {f"SLOT_{slot.upper()}": True}
     includes = [proj_path / "../src/"]
+
+    # Set the LibreLane PDK/SCL/PAD defines
+    defines[f"PDK_{pdk.replace('-','_')}"] = True
+    defines[f"SCL_{scl}"] = True
+    defines[f"PAD_{pad}"] = True
+    defines[f"SRAM_{sram}"] = True
 
     if gl:
         # SCL models
@@ -102,12 +110,11 @@ def chip_core_runner():
 
     sources += [
         # IO pad models
-        Path(pdk_root) / pdk / "libs.ref/gf180mcu_fd_io/verilog/gf180mcu_fd_io.v",
-        Path(pdk_root) / pdk / "libs.ref/gf180mcu_fd_io/verilog/gf180mcu_ws_io.v",
+        Path(pdk_root) / pdk / f"libs.ref/{pad}/verilog/{pad}.v",
         
         # SRAM macros
-        Path(pdk_root) / pdk / "libs.ref/gf180mcu_fd_ip_sram/verilog/gf180mcu_fd_ip_sram__sram512x8m8wm1.v",
-        
+        Path(pdk_root) / pdk / f"libs.ref/{sram}/verilog/{sram}__sram512x8m8wm1.v",
+                
         # Custom IP
         proj_path / "../ip/gf180mcu_ws_ip__id/vh/gf180mcu_ws_ip__id.v",
         proj_path / "../ip/gf180mcu_ws_ip__logo/vh/gf180mcu_ws_ip__logo.v",
