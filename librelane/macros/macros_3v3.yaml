@@ -98,7 +98,7 @@ MACROS:
       i_chip_core.tt.i_tinyqv.cpu.i_scratch.i_sram:
         location: [450, 1760]
         orientation: N
-      i_chip_core.i_text.i_sram2:
+      i_chip_core.tt.i_video.i_text.i_sram2:
         location: [1070, 445]
         orientation: S
 
@@ -118,13 +118,13 @@ MACROS:
         - pdk_dir::libs.ref/gf180mcu_ocd_ip_sram/lib/gf180mcu_ocd_ip_sram__sram1024x8m8wm1__ss_125C_3v00.lib
     instances:
       # Make sure to specify the SRAMs in pdn_cfg.tcl
-      i_chip_core.i_text.i_sram0:
+      i_chip_core.tt.i_video.i_text.i_sram0:
         location: [450, 445]
         orientation: S
-      i_chip_core.i_text.i_sram1:
+      i_chip_core.tt.i_video.i_text.i_sram1:
         location: [760, 445]
         orientation: S
-      i_chip_core.i_font.i_sram:
+      i_chip_core.tt.i_video.i_font.i_sram:
         location: [1185, 1250]
         orientation: N
 
@@ -132,7 +132,7 @@ MACROS:
 # specifying the power connections in the RTL
 PDN_MACRO_CONNECTIONS:
 - "i_chip_core.tt.i_tinyqv.cpu.i_scratch.i_sram VDD VSS VDD VSS"
-- "i_chip_core.i_text.i_sram0 VDD VSS VDD VSS"
-- "i_chip_core.i_text.i_sram1 VDD VSS VDD VSS"
-- "i_chip_core.i_text.i_sram2 VDD VSS VDD VSS"
-- "i_chip_core.i_font.i_sram VDD VSS VDD VSS"
+- "i_chip_core.tt.i_video.i_text.i_sram0 VDD VSS VDD VSS"
+- "i_chip_core.tt.i_video.i_text.i_sram1 VDD VSS VDD VSS"
+- "i_chip_core.tt.i_video.i_text.i_sram2 VDD VSS VDD VSS"
+- "i_chip_core.tt.i_video.i_font.i_sram VDD VSS VDD VSS"

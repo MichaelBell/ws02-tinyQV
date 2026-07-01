@@ -18,7 +18,8 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
     output wire       uart_tx,
     output wire       uart_rts,
     output wire       debug_uart_txd,
-    output wire       debug_signal
+    output wire       debug_signal,
+    output wire [7:0] video_out
 );
 
     // Address to peripheral map
@@ -29,6 +30,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
     localparam PERI_DEBUG_UART_STATUS = 4'h7;
     localparam PERI_TIME_LIMIT = 4'hB;
     localparam PERI_DEBUG = 4'hC;
+    localparam PERI_VIDEO = 4'hE;
     localparam PERI_USER = 4'hF;
 
     // Bidirs are used for SPI interface
@@ -123,10 +125,12 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
     end
 
     // Text console interface
-    wire text_interrupt = 1'b0;
+    wire video_interrupt;
+    wire [7:0] video_data_out;
+    wire       video_data_ready;
 
     // Interrupt requests
-    wire [7:0] interrupt_req = {text_interrupt, peri_interrupts, ui_in_sync[1:0]};
+    wire [7:0] interrupt_req = {video_interrupt, peri_interrupts, ui_in_sync[1:0]};
     // Register the reset on the negative edge of clock for safety.
     // This also allows the option of async reset in the design, which might be preferable in some cases
     always @(negedge clk) setup_rst_n <= rst_n;
@@ -248,6 +252,8 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
             connect_peripheral = addr[5:2];
         else if (addr[27:11] == 17'h10000)
             connect_peripheral = PERI_USER;
+        else if (addr[27:23] == 5'h11)
+            connect_peripheral = PERI_VIDEO;
         else
             connect_peripheral = PERI_NONE;
     end
@@ -259,12 +265,14 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
             PERI_GPIO_OUT_SEL:data_from_read = {25'h0, gpio_out_sel, 6'h0};
             PERI_DEBUG_UART_STATUS: data_from_read = {31'h0, debug_uart_tx_busy};
             PERI_TIME_LIMIT:  data_from_read = {25'h0, time_limit, 2'b11};
+            PERI_VIDEO:       data_from_read = {24'h0, video_data_out};
             PERI_USER:        data_from_read = peri_data_out;
             default:          data_from_read = 32'hFFFF_FFFF;
         endcase
     end
 
-    assign data_ready = (connect_peripheral == PERI_USER) ? peri_data_ready : 1'b1;
+    assign data_ready = (connect_peripheral == PERI_USER) ? peri_data_ready : 
+                        (connect_peripheral == PERI_VIDEO) ? video_data_ready : 1'b1;
 
     // GPIO Out
     always @(posedge clk) begin
@@ -331,6 +339,22 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
                           debug_stop_txn};
     end
     assign debug_signal = debug_signals[ui_in[6:3]];
+
+    tinyQV_text_mode_video i_video(
+        .clk(clk),
+        .clk5x(1'b1),
+        .rst_n(rst_reg_n),
+        .use_hdmi(1'b0),
+        .addr_in(addr[11:0]),
+        .data_in(data_to_write[7:0]),
+        .data_write_n(write_n == 2'b11 || connect_peripheral != PERI_VIDEO),
+        .data_read_n(read_n == 2'b11 || connect_peripheral != PERI_VIDEO),
+        .data_out(video_data_out),
+        .data_ready(video_data_ready),
+        .data_read_complete(read_complete),
+        .interrupt(video_interrupt),
+        .video_out(video_out)
+    );
 
     // List all unused inputs to prevent warnings
     wire _unused = &{ena, uio_in[7:6], uio_in[3], uio_in[0], read_complete, 1'b0};
