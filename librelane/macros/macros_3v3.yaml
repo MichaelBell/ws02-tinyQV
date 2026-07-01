@@ -165,7 +165,7 @@ MACROS:
       - dir::../ip/r2r/vh/r2r.vh
     instances:
       i_chip_core.tt.i_r2r:
-        location: [466, 995]
+        location: [464, 995]
         orientation: E
     
   analog_connect:
