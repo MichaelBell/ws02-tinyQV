@@ -46,3 +46,8 @@ sram_pdn_ns pdn_text_ram0  i_chip_core.tt.i_video.i_text.i_sram0
 sram_pdn_ns pdn_text_ram1  i_chip_core.tt.i_video.i_text.i_sram1
 sram_pdn_ns pdn_text_ram2  i_chip_core.tt.i_video.i_text.i_sram2
 sram_pdn_ns pdn_font_ram   i_chip_core.tt.i_video.i_font.i_sram
+
+# Required for R2R DAC ground connection
+add_pdn_connect \
+    -grid macro \
+    -layers "$::env(PDN_VERTICAL_LAYER) Metal2"
