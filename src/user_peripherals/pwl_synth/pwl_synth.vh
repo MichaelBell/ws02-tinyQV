@@ -31,7 +31,7 @@
 `define USE_STEREO_POS
 `define USE_OSC_SYNC // currently only implemented to work with USE_P_LATCHES_ONLY, need write back condition (override oct_enable) for next step otherwise
 `define USE_4_BIT_MODE // only works together with USE_OSC_SYNC
-`define USE_OSC_SYNC_ONLY_FOR_SOME_CHANNELS
+//`define USE_OSC_SYNC_ONLY_FOR_SOME_CHANNELS
 `define USE_SWAPPED_DETUNE_SIGNS
 `define USE_COMMON_SAT_STEREO
 `define USE_DETUNE_FIFTH
