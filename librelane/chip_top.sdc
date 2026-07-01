@@ -108,3 +108,4 @@ if { [info exists ::env(OPENLANE_SDC_IDEAL_CLOCKS)] && $::env(OPENLANE_SDC_IDEAL
 
 # Ignore switch of setup/ctrl mux on QSPI output paths
 set_false_path -from *.tt.rst_reg_n_gf180mcu_as_sc_mcu7t3v3__dfxtn_2_Q -to $clk_core_inout_ports
+set_false_path -through *real_rst_n* -to $clk_core_inout_ports
