@@ -475,14 +475,14 @@ async def read_byte(dut, reg, expected_val):
 
   await stop_nops()
 
-VSYNC_PAD = 32
+VSYNC_PAD = 35
 HSYNC_PAD = 36
-R0_PAD = 33
-G0_PAD = 34
-B0_PAD = 35
-R1_PAD = 29
-G1_PAD = 30
-B1_PAD = 31
+R0_PAD = 29
+G0_PAD = 31
+B0_PAD = 33
+R1_PAD = 30
+G1_PAD = 32
+B1_PAD = 34
 
 async def capture_vga_frames(dut, n=1, capture_start=0, frame_num_start=0):
     image = Image.new("RGB", (640, 480))

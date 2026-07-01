@@ -106,6 +106,12 @@ module chip_core #(
         else clkdiv <= {clkdiv[0], clkdiv[4:1]};
     end
     wire real_clk = use_hdmi_n ? clk : clkdiv[0];
+    reg [4:0] rst_delay;
+    always @(posedge real_clk or negedge rst_n) begin
+        if (~rst_n) rst_delay <= 5'b00000;
+        else rst_delay <= {rst_delay[3:0], 1'b1};
+    end
+    wire real_rst_n = use_hdmi_n ? rst_n : rst_delay[4];
 
     tt_um_MichaelBell_tinyQV tt(
         .ui_in(bidir_in[7:0]),
@@ -115,7 +121,7 @@ module chip_core #(
         .uio_oe(uio_oe),
         .ena(1'b1),
         .clk(real_clk),
-        .rst_n(rst_n),
+        .rst_n(real_rst_n),
         .clk5x(clk5x),
         .use_hdmi_n(use_hdmi_n),
         .uart_rx(input_in[0]),

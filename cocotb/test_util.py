@@ -7,20 +7,27 @@ from riscvmodel.insn import *
 
 from riscvmodel.regnames import x0, gp, tp, a0
 
-async def reset(dut, latency=1, ui_in=0x80):
+async def reset(dut, latency=1, ui_in=0x80, use_hdmi=False):
   # Reset
   dut._log.info(f"Reset, latency {latency}")
   dut.ui_in_base.value = ui_in
   dut.rst_n.value = 1
   dut.uart_rx.value = 1
+  dut.use_hdmi_n.value = 0 if use_hdmi else 1
   await ClockCycles(dut.clk, 2)
   dut.rst_n.value = 0
+  dut.use_latency_cfg_n.value = 0
   dut.latency_cfg.value = latency
   await ClockCycles(dut.clk, 1)
   assert dut.uio_oe.value == 0
   await ClockCycles(dut.clk, 9)
   dut.rst_n.value = 1
-  await ClockCycles(dut.clk, 2)
+  if use_hdmi:
+      await ClockCycles(dut.clk, 5)
+  dut.use_latency_cfg_n.value = 1
+  if not use_hdmi:
+      await ClockCycles(dut.clk, 1)
+  await ClockCycles(dut.clk, 1)
   
   await setup_flash(dut)
   await ClockCycles(dut.clk, 2)
