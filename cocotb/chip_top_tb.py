@@ -477,12 +477,12 @@ async def read_byte(dut, reg, expected_val):
 
 VSYNC_PAD = 35
 HSYNC_PAD = 36
-R0_PAD = 29
-G0_PAD = 31
-B0_PAD = 33
-R1_PAD = 30
-G1_PAD = 32
-B1_PAD = 34
+R0_PAD = 30
+G0_PAD = 32
+B0_PAD = 34
+R1_PAD = 29
+G1_PAD = 31
+B1_PAD = 33
 
 async def capture_vga_frames(dut, n=1, capture_start=0, frame_num_start=0):
     image = Image.new("RGB", (640, 480))
