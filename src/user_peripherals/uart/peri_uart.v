@@ -50,7 +50,7 @@ module tqvp_uart_wrapper #(
     reg [1:0] rxd_select;
     always @(posedge clk) begin
         if (!rst_n) begin
-            rxd_select <= 0;
+            rxd_select <= 2'b10;
         end else begin
             if (address == 6'hc) begin
                 if (data_write_n != 2'b11) rxd_select <= data_in[1:0];
@@ -84,6 +84,10 @@ module tqvp_uart_wrapper #(
                     rxd_select[0] ? ui_in[3] : ui_in[7];
     wire uart_rts;
 
+    // Buffer one byte of received data
+    reg uart_rx_buffered;
+    reg [7:0] uart_rx_buf_data;
+
     tqvp_uart_rx i_uart_rx(
         .clk(clk),
         .resetn(rst_n),
@@ -94,10 +98,6 @@ module tqvp_uart_wrapper #(
         .uart_rx_data(uart_rx_data),
         .baud_divider(baud_divider) 
     );
-
-    // Buffer one byte of received data
-    reg uart_rx_buffered;
-    reg [7:0] uart_rx_buf_data;
 
     always @(posedge clk) begin
         if (!rst_n) begin

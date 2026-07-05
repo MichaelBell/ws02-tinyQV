@@ -5,13 +5,15 @@
 
 `default_nettype none
 
-module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
-    input  wire [7:0] ui_in,    // Dedicated inputs
-    output wire [8:0] uo_out,   // Dedicated outputs
-    input  wire [7:0] uio_in,   // IOs: Input path - only some bits used
-    output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
+module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200, parameter NUM_GPIO=17) (
+    input  wire [NUM_GPIO-1:0] gpio_in,
+    output wire [NUM_GPIO-1:0] gpio_out,
+    output wire [NUM_GPIO-1:0] gpio_oe,
+    output wire [NUM_GPIO-1:0] gpio_pu,
+    output wire [NUM_GPIO-1:0] gpio_pd,
+    input  wire [7:0] qspi_in,   // IOs: Input path - only some bits used
+    output wire [7:0] qspi_out,  // IOs: Output path
+    output wire [7:0] qspi_oe,   // IOs: Enable path (active high: 0=input, 1=output)
     input  wire       clk,
     input  wire       rst_n,
     input  wire       clk5x,
@@ -38,20 +40,21 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
     localparam PERI_USER = 4'hF;
 
     // Bidirs are used for SPI interface
-    wire [3:0] qspi_data_in = {uio_in[5:4], uio_in[2:1]};
+    wire [3:0] qspi_data_in = {qspi_in[5:4], qspi_in[2:1]};
     wire [3:0] qspi_data_out;
     wire [3:0] qspi_data_oe;
     wire       qspi_clk_out;
     wire       qspi_flash_select;
     wire       qspi_ram_a_select;
     wire       qspi_ram_b_select;
+
     wire       audio;
     wire       audio_select;
     wire [7:0] audio_sample;
-    assign uio_out = {audio_select ? audio : qspi_ram_b_select, qspi_ram_a_select, qspi_data_out[3:2], 
+
+    assign qspi_out = {audio_select ? audio : qspi_ram_b_select, qspi_ram_a_select, qspi_data_out[3:2], 
                       qspi_clk_out, qspi_data_out[1:0], qspi_flash_select};
-    assign uio_oe = rst_n ? {2'b11, qspi_data_oe[3:2], 1'b1, qspi_data_oe[1:0], 1'b1} : 8'h00;
-    assign uo_out[8] = audio;
+    assign qspi_oe = rst_n ? {2'b11, qspi_data_oe[3:2], 1'b1, qspi_data_oe[1:0], 1'b1} : 8'h00;
 
     wire [3:0] qspi_data_in_ctrl;
     reg  [3:0] qspi_config;
@@ -112,20 +115,20 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
     wire time_pulse;
 
     // Peripherals interface
-    wire [7:0] peri_out;
+    wire [NUM_GPIO-1:0] peri_out;
     wire [31:0] peri_data_out;
     wire        peri_data_ready;
     wire [6:2] peri_interrupts;
 
     // Peripherals get synchronized ui_in.
-    reg [7:0] ui_in_sync0;
-    reg [7:0] ui_in_sync;
+    reg [NUM_GPIO-1:0] gpio_in_sync0;
+    reg [NUM_GPIO-1:0] gpio_in_sync;
     reg       uart_rx_sync0;
     reg       uart_rx_sync;
     always @(posedge clk) begin
-        ui_in_sync0 <= ui_in;
+        gpio_in_sync0 <= gpio_in;
         uart_rx_sync0 <= uart_rx;
-        ui_in_sync <= ui_in_sync0;
+        gpio_in_sync <= gpio_in_sync0;
         uart_rx_sync <= uart_rx_sync0;
     end
 
@@ -139,7 +142,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
     wire       video_data_ready;
 
     // Interrupt requests
-    wire [7:0] interrupt_req = {video_interrupt, peri_interrupts, ui_in_sync[1:0]};
+    wire [7:0] interrupt_req = {video_interrupt, peri_interrupts, gpio_in_sync[9:8]};
     // Register the reset on the negative edge of clock for safety.
     // This also allows the option of async reset in the design, which might be preferable in some cases
     always @(negedge clk) setup_rst_n <= rst_n;
@@ -218,22 +221,25 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
         .debug_rd(debug_rd)
     );
 
-    assign uo_out[0] = peri_out[0];
-    assign uo_out[1] = peri_out[1];
-    assign uo_out[2] = debug_register_data ? debug_rd_r[0] : peri_out[2];
-    assign uo_out[3] = debug_register_data ? debug_rd_r[1] : peri_out[3];
-    assign uo_out[4] = debug_register_data ? debug_rd_r[2] : peri_out[4];
-    assign uo_out[5] = debug_register_data ? debug_rd_r[3] : peri_out[5];
-    assign uo_out[6] = gpio_out_sel[6] ? peri_out[6] : debug_uart_txd;
-    assign uo_out[7] = peri_out[7];
+    assign gpio_out[0] = peri_out[0];
+    assign gpio_out[1] = peri_out[1];
+    assign gpio_out[2] = debug_register_data ? debug_rd_r[0] : peri_out[2];
+    assign gpio_out[3] = debug_register_data ? debug_rd_r[1] : peri_out[3];
+    assign gpio_out[4] = debug_register_data ? debug_rd_r[2] : peri_out[4];
+    assign gpio_out[5] = debug_register_data ? debug_rd_r[3] : peri_out[5];
+    assign gpio_out[6] = gpio_out_sel[6] ? peri_out[6] : debug_uart_txd;
+    assign gpio_out[NUM_GPIO-1:7] = peri_out[NUM_GPIO-1:7];
 
     tinyQV_peripherals #(.CLOCK_KHZ(CLOCK_KHZ)) i_peripherals (
         .clk(clk),
         .rst_n(rst_reg_n),
 
-        .ui_in(ui_in_sync),
-        .ui_in_raw(ui_in),
-        .uo_out(peri_out),
+        .gpio_in(gpio_in_sync),
+        .gpio_in_raw(gpio_in),
+        .gpio_out(peri_out),
+        .gpio_oe(gpio_oe),
+        .gpio_pu(gpio_pu),
+        .gpio_pd(gpio_pd),
 
         .audio(audio),
         .audio_select(audio_select),
@@ -322,7 +328,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
     // Debug
     always @(posedge clk) begin
         if (!rst_reg_n)
-            debug_register_data <= ui_in[1];
+            debug_register_data <= gpio_in[9];
         else if (write_n != 2'b11 && connect_peripheral == PERI_DEBUG)
             debug_register_data <= data_to_write[0];
     end
@@ -350,7 +356,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
                           debug_stall_txn,
                           debug_stop_txn};
     end
-    assign debug_signal = debug_signals[ui_in[6:3]];
+    assign debug_signal = debug_signals[gpio_in[14:11]];
 
     tinyQV_text_mode_video i_video(
         .clk(clk),
@@ -394,6 +400,6 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
     );
 
     // List all unused inputs to prevent warnings
-    wire _unused = &{ena, uio_in[7:6], uio_in[3], uio_in[0], read_complete, 1'b0};
+    wire _unused = &{qspi_in[7:6], qspi_in[3], qspi_in[0], read_complete, 1'b0};
 
 endmodule
