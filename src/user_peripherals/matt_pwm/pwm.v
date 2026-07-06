@@ -7,7 +7,8 @@ module pwm #(
     input wire reset,
     input wire strobe,
     output reg out,
-    input wire [WIDTH-1:0] level
+    input wire [WIDTH-1:0] level,
+    input wire [WIDTH-1:0] wrap
     );
 
     reg [WIDTH-1:0] count;
@@ -15,9 +16,11 @@ module pwm #(
 
     always @(posedge clk) begin
         if(reset)
-            count <= 1'b0;
-        else if(strobe)
-            count <= count + 1'b1;
+            count <= '0;
+        else if(strobe) begin
+            if (count >= wrap) count <= '0;
+            else count <= count + 1'b1;
+        end
     end
 
     always @(posedge clk)

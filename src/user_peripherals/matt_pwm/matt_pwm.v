@@ -29,22 +29,26 @@ module tqvp_matt_pwm (
     reg [7:0] pwm_0;
     reg [7:0] pwm_1;
     reg [7:0] strobe_period;
+    reg [7:0] wrap;
     wire pwm_out_0, pwm_out_1, pwm_strobe;
     wire reset = ! rst_n;
 
-    // Implement an 8-bit read/write register at address 0->2
+    // Implement an 8-bit read/write register at address 0->3
     always @(posedge clk) begin
         if (!rst_n) begin
             pwm_0 <= 0;
             pwm_1 <= 0;
-	    strobe_period <= 0;
+	        strobe_period <= 0;
+            wrap <= 8'hff;
         end else begin
             if (address == 4'h0) begin
                 if (data_write) pwm_0 <= data_in;
-	    end else if (address == 4'h1) begin
+            end else if (address == 4'h1) begin
                 if (data_write) pwm_1 <= data_in;
-	    end else if (address == 4'h2) begin
+            end else if (address == 4'h2) begin
                 if (data_write) strobe_period <= data_in;
+            end else if (address == 4'h3) begin
+                if (data_write) wrap <= data_in;
             end
         end
     end
@@ -56,17 +60,19 @@ module tqvp_matt_pwm (
     // Address 0 reads the pwm0 data register.  
     // Address 1 reads the pwm1 data register.
     // Address 2 reads the strobe period
+    // Address 3 reads the pwm counter wrap value
     // All other addresses read 0.
     assign data_out = (address == 4'h0) ? pwm_0 :
                       (address == 4'h1) ? pwm_1 :
                       (address == 4'h2) ? strobe_period :
+                      (address == 4'h3) ? wrap :
                       8'h0;    
     // strobe gen, generates a strobe every strobe_period + 1 clock cycles
     pwm_strobe_gen #(.WIDTH(16))  pwm_strobe_gen(.clk(clk), .cmp(strobe_period), .reset(reset), .out(pwm_strobe));
 
     // pwm gen
-    pwm        #(.WIDTH(8))   pwm_gen_0(.clk(clk), .reset(reset), .strobe(pwm_strobe), .level(pwm_0), .out(pwm_out_0));
-    pwm        #(.WIDTH(8))   pwm_gen_1(.clk(clk), .reset(reset), .strobe(pwm_strobe), .level(pwm_1), .out(pwm_out_1));
+    pwm        #(.WIDTH(8))   pwm_gen_0(.clk(clk), .reset(reset), .strobe(pwm_strobe), .wrap(wrap), .level(pwm_0), .out(pwm_out_0));
+    pwm        #(.WIDTH(8))   pwm_gen_1(.clk(clk), .reset(reset), .strobe(pwm_strobe), .wrap(wrap), .level(pwm_1), .out(pwm_out_1));
 
 endmodule
 
