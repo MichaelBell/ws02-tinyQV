@@ -156,6 +156,18 @@ MACROS:
         location: [1380, 747]
         orientation: N
 
+  r2r:
+    gds:
+      - dir::../ip/r2r/gds/r2r.gds
+    lef:
+      - dir::../ip/r2r/lef/r2r.lef
+    vh:
+      - dir::../ip/r2r/vh/r2r.vh
+    instances:
+      i_chip_core.tt.i_r2r:
+        location: [466, 995]
+        orientation: E
+
 # This is an alternative method compared to
 # specifying the power connections in the RTL
 PDN_MACRO_CONNECTIONS:
@@ -168,3 +180,4 @@ PDN_MACRO_CONNECTIONS:
 - "i_chip_core.tt.i_video.i_dvi.ser_d1.ddr VDD VSS VDD VSS"
 - "i_chip_core.tt.i_video.i_dvi.ser_d2.ddr VDD VSS VDD VSS"
 - "i_chip_core.tt.i_video.i_dvi.ser_ck.ddr VDD VSS VDD VSS"
+- "i_chip_core.tt.i_r2r VDD VSS VDD VGND"

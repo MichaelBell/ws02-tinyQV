@@ -31,7 +31,7 @@ module chip_core #(
     output wire [NUM_BIDIR_PADS-1:0] bidir_pu,   // Pull-up
     output wire [NUM_BIDIR_PADS-1:0] bidir_pd,   // Pull-down
 
-    inout  wire [NUM_ANALOG_PADS-1:0] analog  // Analog
+    inout wire dac_out
 );
 
     // See here for usage: https://gf180mcu-pdk.readthedocs.io/en/latest/IPs/IO/gf180mcu_fd_io/digital.html
@@ -129,7 +129,8 @@ module chip_core #(
         .uart_rts(bidir_out[26]),
         .debug_uart_txd(bidir_out[27]),
         .debug_signal(bidir_out[28]),
-        .video_out(bidir_out[36:29])
+        .video_out(bidir_out[36:29]),
+        .dac_out(dac_out)
     );
 
 endmodule
