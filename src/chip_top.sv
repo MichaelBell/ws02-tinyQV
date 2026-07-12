@@ -55,6 +55,8 @@ module chip_top #(
 
     inout  wire clk_PAD,
     inout  wire rst_n_PAD,
+    inout  wire clk5x_PAD,
+    inout  wire prog_clk_PAD,
     
     inout  wire [NUM_INPUT_PADS-1:0] input_PAD,
     inout  wire [NUM_BIDIR_PADS-1:0] bidir_PAD,
@@ -64,6 +66,8 @@ module chip_top #(
 
     wire clk_PAD2CORE;
     wire rst_n_PAD2CORE;
+    wire clk5x_PAD2CORE;
+    wire prog_clk_PAD2CORE;
     
     wire [NUM_INPUT_PADS-1:0] input_PAD2CORE;
     wire [NUM_INPUT_PADS-1:0] input_CORE2PAD_PU;
@@ -148,6 +152,36 @@ module chip_top #(
     
         .Y      (clk_PAD2CORE),
         .PAD    (clk_PAD),
+        
+        .PU     (1'b0),
+        .PD     (1'b0)
+    );
+    
+    `gf180mcu_xxx_io__in_s clk5x_pad (
+        `ifdef USE_POWER_PINS
+        .DVDD   (DVDD),
+        .DVSS   (DVSS),
+        .VDD    (VDD),
+        .VSS    (VSS),
+        `endif
+    
+        .Y      (clk5x_PAD2CORE),
+        .PAD    (clk5x_PAD),
+        
+        .PU     (1'b0),
+        .PD     (1'b0)
+    );
+    
+    `gf180mcu_xxx_io__in_s prog_clk_pad (
+        `ifdef USE_POWER_PINS
+        .DVDD   (DVDD),
+        .DVSS   (DVSS),
+        .VDD    (VDD),
+        .VSS    (VSS),
+        `endif
+    
+        .Y      (prog_clk_PAD2CORE),
+        .PAD    (prog_clk_PAD),
         
         .PU     (1'b0),
         .PD     (1'b0)
@@ -244,6 +278,8 @@ module chip_top #(
     
         .clk        (clk_PAD2CORE),
         .rst_n      (rst_n_PAD2CORE),
+        .clk5x      (clk5x_PAD2CORE),
+        .prog_clk   (prog_clk_PAD2CORE),
     
         .input_in   (input_PAD2CORE),
         .input_pu   (input_CORE2PAD_PU),

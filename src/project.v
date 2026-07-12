@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
+module tt_um_MichaelBell_tinyQV #(parameter CLOCK_KHZ=25200) (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [8:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path - only some bits used
@@ -14,6 +14,8 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
     input  wire       clk,
     input  wire       rst_n,
+    input  wire       clk5x,
+    input  wire       use_hdmi_n,
     input  wire       uart_rx,
     output wire       uart_tx,
     output wire       uart_rts,
@@ -218,7 +220,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
     assign uo_out[6] = gpio_out_sel[6] ? peri_out[6] : debug_uart_txd;
     assign uo_out[7] = peri_out[7];
 
-    tinyQV_peripherals #(.CLOCK_MHZ(CLOCK_MHZ)) i_peripherals (
+    tinyQV_peripherals #(.CLOCK_KHZ(CLOCK_KHZ)) i_peripherals (
         .clk(clk),
         .rst_n(rst_reg_n),
 
@@ -261,7 +263,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
     // Read data
     always @(*) begin
         case (connect_peripheral)
-            PERI_ID:          data_from_read = "WS01";
+            PERI_ID:          data_from_read = "WS02";
             PERI_GPIO_OUT_SEL:data_from_read = {25'h0, gpio_out_sel, 6'h0};
             PERI_DEBUG_UART_STATUS: data_from_read = {31'h0, debug_uart_tx_busy};
             PERI_TIME_LIMIT:  data_from_read = {25'h0, time_limit, 2'b11};
@@ -278,7 +280,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
     always @(posedge clk) begin
         if (!rst_reg_n) begin
             gpio_out_sel <= 1'b1;
-            time_limit <= (CLOCK_MHZ / 4 - 1);
+            time_limit <= 5'd5;
         end
         if (write_n != 2'b11) begin
             if (connect_peripheral == PERI_GPIO_OUT_SEL) gpio_out_sel <= data_to_write[6:6];
@@ -286,7 +288,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
         end
     end
 
-    uart_tx #(.CLK_HZ(CLOCK_MHZ * 1_000_000), .BIT_RATE(4_000_000)) i_debug_uart_tx(
+    uart_tx #(.CLK_HZ(CLOCK_KHZ * 1_000), .BIT_RATE(1_000_000)) i_debug_uart_tx(
         .clk(clk),
         .resetn(rst_reg_n),
         .uart_txd(debug_uart_txd),
@@ -342,9 +344,9 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
 
     tinyQV_text_mode_video i_video(
         .clk(clk),
-        .clk5x(1'b1),
+        .clk5x(clk5x),
         .rst_n(rst_reg_n),
-        .use_hdmi(1'b0),
+        .use_hdmi_n(use_hdmi_n),
         .addr_in(addr[11:0]),
         .data_in(data_to_write[7:0]),
         .data_write_n(write_n == 2'b11 || connect_peripheral != PERI_VIDEO),
