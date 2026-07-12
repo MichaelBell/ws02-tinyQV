@@ -16,10 +16,10 @@ module pwm_strobe_gen #(
             out   <= 1'b0;
         end else if (count >= cmp) begin
             out   <= 1'b1;
-	    count <= 1'b0;
-	end else begin
+            count <= 1'b0;
+        end else begin
             count <= count + 1'b1;
-	    out   <= 1'b0;
+            out   <= 1'b0;
         end
     end
 
