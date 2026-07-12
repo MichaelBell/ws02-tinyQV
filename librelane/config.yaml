@@ -35,6 +35,7 @@ VERILOG_FILES:
 - dir::../src/chip_core.sv
 - dir::../src/project.v
 - dir::../src/text_ram.v
+- dir::../src/font.v
 - dir::../src/tinyQV/cpu/tinyqv.v
 - dir::../src/tinyQV/cpu/alu.v
 - dir::../src/tinyQV/cpu/buffer.v
@@ -128,7 +129,7 @@ MAX_TRANSITION_CONSTRAINT: 1.8
 
 # Increase for more logic
 # on your die
-PL_TARGET_DENSITY_PCT: 50
+PL_TARGET_DENSITY_PCT: 60
 GRT_ALLOW_CONGESTION: true
 
 SYNTH_AUTONAME: True
