@@ -1051,6 +1051,8 @@ def chip_top_runner():
         proj_path / "../ip/gf180mcu_ws_ip__project_id/vh/gf180mcu_ws_ip__project_id.v",
         
         proj_path / "../ip/ddr_driver/verilog/ddr_driver.v",
+        proj_path / "../ip/r2r/vh/r2r.vh",
+        proj_path / "../ip/analog_connect/analog_connect.vh",
 
         # Testbench
         "tb_top.v"
