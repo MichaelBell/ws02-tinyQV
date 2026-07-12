@@ -96,7 +96,7 @@ MACROS:
     instances:
       # Make sure to specify the SRAMs in pdn_cfg.tcl
       i_chip_core.tt.i_tinyqv.cpu.i_scratch.i_sram:
-        location: [490, 1400]
+        location: [490, 1760]
         orientation: N
 
 # This is an alternative method compared to
