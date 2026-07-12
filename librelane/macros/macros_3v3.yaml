@@ -167,6 +167,18 @@ MACROS:
       i_chip_core.tt.i_r2r:
         location: [466, 995]
         orientation: E
+    
+  analog_connect:
+    gds:
+      - dir::../ip/analog_connect/analog_connect.gds
+    lef:
+      - dir::../ip/analog_connect/analog_connect.lef
+    vh:
+      - dir::../ip/analog_connect/analog_connect.vh
+    instances:
+      dac_connect:
+        location: [376, 733.34]
+        orientation: E
 
 # This is an alternative method compared to
 # specifying the power connections in the RTL
