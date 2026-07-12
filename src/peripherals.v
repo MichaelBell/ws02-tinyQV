@@ -41,6 +41,8 @@ module tinyQV_peripherals #(parameter CLOCK_KHZ=25200) (
 
     input         data_read_complete,  // Set by TinyQV when a read is complete
 
+    output [7:0]  audio_sample,
+
     output [6:2] user_interrupts  // User peripherals get interrupts 2-6
 );
 
@@ -288,6 +290,8 @@ module tinyQV_peripherals #(parameter CLOCK_KHZ=25200) (
 
         .data_out(data_from_user_peri[5]),
         .data_ready(data_ready_from_user_peri[5]),
+
+        .audio_sample(audio_sample),
 
         .user_interrupt(user_interrupts[5])
     );

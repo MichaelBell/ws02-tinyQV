@@ -27,6 +27,8 @@ module tqvp_toivoh_pwl_synth #(parameter BITS=12, BITS_E=13, OCT_BITS=3, DETUNE_
 		output [31:0] data_out,     // Data out from the peripheral, bottom 8, 16 or all 32 bits are valid on read when data_ready is high.
 		output        data_ready,
 
+		output [7:0] audio_sample,
+
 `ifdef USE_TEST_INTERFACE
 		input wire en_external,
 		input wire state_override_en,
@@ -159,6 +161,7 @@ module tqvp_toivoh_pwl_synth #(parameter BITS=12, BITS_E=13, OCT_BITS=3, DETUNE_
 	assign reg_rdata = reg_rdata_p;
 `endif
 
+	wire [BITS-1:0] out_acc_out;
 	wire pwm_out, pwm_out_right;
 	pwls_multichannel_ALU_unit #(.BITS(BITS), .BITS_E(BITS_E), .OCT_BITS(OCT_BITS), .DETUNE_EXP_BITS(DETUNE_EXP_BITS), .SLOPE_EXP_BITS(SLOPE_EXP_BITS), .NUM_CHANNELS(NUM_CHANNELS)) mc_alu_unit(
 		.clk(clk), .rst_n(rst_n), .en(en), .next_en(next_en),
@@ -187,6 +190,8 @@ module tqvp_toivoh_pwl_synth #(parameter BITS=12, BITS_E=13, OCT_BITS=3, DETUNE_
 	.acc_out(acc_out), 	.new_out_acc(new_out_acc), 	.out_acc_out(out_acc_out), 	.pwm_out_offset(pwm_out_offset),
 `endif
 
+		.out_acc_out(out_acc_out),
+
 		.pwm_out(pwm_out), .pwm_out_right(pwm_out_right)
 	);
 
@@ -196,6 +201,8 @@ module tqvp_toivoh_pwl_synth #(parameter BITS=12, BITS_E=13, OCT_BITS=3, DETUNE_
 `else
 	wire [1:0] pwm_outs = {pwm_out_right, pwm_out};
 `endif
+
+	assign audio_sample = {8{out_acc_out[10]}} | {out_acc_out[9:4], 2'b00};
 
 	//assign uo_out = pwm_out ? '1 : 0;
 	assign uo_out = {4{pwm_outs}};
