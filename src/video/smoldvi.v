@@ -23,12 +23,17 @@ wire [9:0] tmds0;
 wire [9:0] tmds1;
 wire [9:0] tmds2;
 
+reg den_delay;
+always @(posedge clk_pix) begin
+	den_delay <= den;
+end
+
 simple_tmds_encode tmds0_encoder (
 	.clk   (clk_pix),
 	.rst_n (rst_n_pix),
 	.c     ({vsync, hsync}),
 	.d     (b),
-	.den   (den),
+	.den   (den_delay),
 	.q     (tmds0)
 );
 
@@ -37,7 +42,7 @@ simple_tmds_encode tmds1_encoder (
 	.rst_n (rst_n_pix),
 	.c     (2'b00),
 	.d     (g),
-	.den   (den),
+	.den   (den_delay),
 	.q     (tmds1)
 );
 
@@ -46,7 +51,7 @@ simple_tmds_encode tmds2_encoder (
 	.rst_n (rst_n_pix),
 	.c     (2'b00),
 	.d     (r),
-	.den   (den),
+	.den   (den_delay),
 	.q     (tmds2)
 );
 
