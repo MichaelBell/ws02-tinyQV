@@ -41,7 +41,7 @@ module text_ram #(parameter ADDR_BITS=12) (
         .CEN(!rstn),
         .GWEN(write_enable_n[2]),
         .WEN(8'hff),
-        .A(data_addr[9:0]),
+        .A(data_addr[8:0]),
         .D(data_in),
         .Q(data_out2)
     );

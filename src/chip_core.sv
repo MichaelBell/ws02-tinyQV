@@ -107,47 +107,9 @@ module chip_core #(
         .uart_tx(bidir_out[25]),
         .uart_rts(bidir_out[26]),
         .debug_uart_txd(bidir_out[27]),
-        .debug_signal(bidir_out[28])
+        .debug_signal(bidir_out[28]),
+        .video_out(bidir_out[36:29])
     );
-
-    logic [12:0] count;
-
-    always_ff @(posedge clk) begin
-        if (!rst_n) begin
-            count <= '0;
-        end else begin
-            count <= count + 1;
-        end
-    end
-
-    // Test
-    wire [7:0] text_out;
-    wire [7:0] font_out;
-    wire [7:0] font_data;
-    text_ram i_text(
-        .clk(clk),
-        .rstn(rst_n),
-        .data_addr(count[12:1]),
-        .data_write_n(count[0]),
-        .data_in(bidir_in[36:29]),
-        .data_out(text_out)
-    );
-
-    font_8x16 i_font (
-        .clk(clk),
-        .rstn(rst_n),
-        .data_addr(count[10:1]),
-        .data_write_n('0),
-        .data_in('0),
-        .data_out(font_out),
-        .char_read(count[0]),
-        .char_in(count[12:6]),
-        .y(count[5:2]),
-        .x(count[1]),
-        .char_data(font_data)
-    );
-
-    assign bidir_out[36:29] = text_out ^ font_out ^ font_data;
 
 endmodule
 
