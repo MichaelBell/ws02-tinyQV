@@ -14,13 +14,19 @@
 // 0x800_00c0 - 0ff: Game pmod
 // 0x800_0100 - 2bf: 7 user peripherals (64 bytes each, word and halfword access supported, each has an interrupt)
 // 0x800_0400 - 43f: 4 simple peripherals (16 bytes each, byte access only)
-module tinyQV_peripherals #(parameter CLOCK_KHZ=25200) (
+module tinyQV_peripherals #(
+    parameter CLOCK_KHZ=25200, 
+    parameter NUM_GPIO=17
+) (
     input         clk,
     input         rst_n,
 
-    input  [7:0]  ui_in,        // The input PMOD, always available
-    input  [7:0]  ui_in_raw,    // The input PMOD, not synchronized
-    output [7:0]  uo_out,       // The output PMOD.  Each wire is only connected if this peripheral is selected
+    input  [NUM_GPIO-1:0]  gpio_in,        // GPIO inputs, always available
+    input  [NUM_GPIO-1:0]  gpio_in_raw,    // GPIO inputs, not synchronized
+    output [NUM_GPIO-1:0]  gpio_out,       // GPIO output.  Each wire is only connected if this peripheral is selected
+    output [NUM_GPIO-1:0]  gpio_oe,        // GPIO output enable.
+    output [NUM_GPIO-1:0]  gpio_pu,        // GPIO pull up
+    output [NUM_GPIO-1:0]  gpio_pd,        // GPIO pull down
 
     output reg    audio,        // An extra output that can be selected on to uio[7]
     output        audio_select, // Whether audio should be selected on uio[7] (resets to 0).
@@ -71,8 +77,12 @@ module tinyQV_peripherals #(parameter CLOCK_KHZ=25200) (
 
     wire [7:0]  uo_out_from_user_peri   [0:NUM_USER_PERI-1];
     wire [7:0]  uo_out_from_simple_peri [0:NUM_SIMPLE_PERI-1];
-    reg [7:0] uo_out_comb;
-    assign uo_out = uo_out_comb;
+    reg [NUM_GPIO-1:0] uo_out_comb;
+    assign gpio_out = uo_out_comb;
+
+    // For now peripherals except GPIO see the second 8 inputs
+    wire [7:0] ui_in = gpio_in[15:8];
+    wire [7:0] ui_in_raw = gpio_in_raw[15:8];
 
     // Rebuffer reset on positive edge of clock.  This is fine providing peripherals
     // don't use async reset.
@@ -142,35 +152,56 @@ module tinyQV_peripherals #(parameter CLOCK_KHZ=25200) (
     // GPIO
 
     reg [2:0] audio_func_sel;
-    reg [4:0] gpio_out_func_sel [0:7];
-    reg [7:0] gpio_out;
+    reg [4:0] gpio_out_func_sel [0:NUM_GPIO-1];
+    reg [NUM_GPIO-1:0] io_out;
+    reg [NUM_GPIO-1:0] io_oe;
+    reg [NUM_GPIO-1:0] io_pu;
+    reg [NUM_GPIO-1:0] io_pd;
 
     always @(posedge clk) begin
         if (!rst_n_rebuf) begin
-            gpio_out <= 0;
+            io_out <= 0;
+            io_oe <= 17'h100ff;
+            io_pu <= 0;
+            io_pd <= 0;
+            audio_func_sel <= 0;
         end else if (peri_user[PERI_GPIO]) begin
-            if (addr_in[5:0] == 6'h0) begin
-                if (data_write_n != 2'b11) gpio_out <= data_in[7:0];
-            end
+            case(addr_in[5:0])
+                6'h0: if (data_write_n != 2'b11) io_out <= data_in[NUM_GPIO-1:0];
+                6'h8: if (data_write_n != 2'b11) io_oe <= data_in[NUM_GPIO-1:0];
+                6'hc: if (data_write_n != 2'b11) io_pu <= data_in[NUM_GPIO-1:0];
+                6'h10: if (data_write_n != 2'b11) io_pd <= data_in[NUM_GPIO-1:0];
+                6'h1c: if (data_write_n != 2'b11) audio_func_sel <= data_in[2:0];
+                default:;
+            endcase
         end
     end
 
-    assign data_from_user_peri[PERI_GPIO] = (addr_in[5:0] == 6'h0) ? {24'h0, gpio_out} :
-                                            (addr_in[5:0] == 6'h4) ? {24'h0, ui_in}    :
-                                            (addr_in[5:0] == 6'h10)? {29'h0, audio_func_sel} :
-                                            ({addr_in[5], addr_in[1:0]} == 3'b100) ? {27'h0, gpio_out_func_sel[addr_in[4:2]][4:0] } :
+    assign data_from_user_peri[PERI_GPIO] = (addr_in[5:0] == 6'h0)  ? {{32-NUM_GPIO{1'b0}}, io_out} :
+                                            (addr_in[5:0] == 6'h4)  ? {{32-NUM_GPIO{1'b0}}, gpio_in} :
+                                            (addr_in[5:0] == 6'h8)  ? {{32-NUM_GPIO{1'b0}}, io_oe} :
+                                            (addr_in[5:0] == 6'hc)  ? {{32-NUM_GPIO{1'b0}}, io_pu} :
+                                            (addr_in[5:0] == 6'h10) ? {{32-NUM_GPIO{1'b0}}, io_pd} :
+                                            (addr_in[5:0] == 6'h1c) ? {29'h0, audio_func_sel} :
+                                            (addr_in[5]) ? {27'h0, gpio_out_func_sel[addr_in[4:0]][4:0] } :
                                             32'h0;
     assign data_ready_from_user_peri[PERI_GPIO] = 1;
-    assign uo_out_from_user_peri[PERI_GPIO] = gpio_out;
+
+    assign gpio_oe = io_oe;
+    assign gpio_pu = io_pu;
+    assign gpio_pd = io_pd;
+
+    // This is unused, but set here to avoid synth warnings.
+    assign uo_out_from_user_peri[PERI_GPIO] = 8'h0;
 
     genvar i;
     generate
-        for (i = 0; i < 8; i = i + 1) begin
+        for (i = 0; i < NUM_GPIO; i = i + 1) begin
             always @(posedge clk) begin
                 if (!rst_n_rebuf) begin
-                    gpio_out_func_sel[i] <= (i == 0 || i == 1) ? PERI_UART : PERI_GPIO;
+                    gpio_out_func_sel[i] <= (i == 0 || i == 1 || i == 16) ? PERI_UART : PERI_GPIO;
                 end else if (peri_user[PERI_GPIO]) begin
-                    if ({addr_in[5], addr_in[1:0]} == 3'b100 && addr_in[4:2] == i) begin
+                    if (addr_in[5] && addr_in[4:0] == i) begin
                         if (data_write_n != 2'b11) gpio_out_func_sel[i] <= {data_in[4:0]};
                     end
                 end
@@ -179,24 +210,21 @@ module tinyQV_peripherals #(parameter CLOCK_KHZ=25200) (
             always @(*) begin
                 uo_out_comb[i] = 0;
 
-                if (gpio_out_func_sel[i][4]) begin
-                    uo_out_comb[i] = uo_out_from_simple_peri[gpio_out_func_sel[i][1:0]][i];
-                end else begin
-                    uo_out_comb[i] = uo_out_from_user_peri[gpio_out_func_sel[i][2:0]][i];
+                if (i == 16) begin
+                    if (gpio_out_func_sel[i] == PERI_GPIO) uo_out_comb[i] = io_out[i];
+                    else uo_out_comb[i] = audio;
+                end
+                else begin
+                    if (gpio_out_func_sel[i][4]) begin
+                        uo_out_comb[i] = uo_out_from_simple_peri[gpio_out_func_sel[i][1:0]][i & 3'b111];
+                    end else begin
+                        if (gpio_out_func_sel[i] == PERI_GPIO) uo_out_comb[i] = io_out[i];
+                        else uo_out_comb[i] = uo_out_from_user_peri[gpio_out_func_sel[i][2:0]][i & 3'b111];
+                    end
                 end
             end
         end
     endgenerate
-
-    always @(posedge clk) begin
-        if (!rst_n_rebuf) begin
-            audio_func_sel <= 0;
-        end else if (peri_user[PERI_GPIO]) begin
-            if (addr_in[5:0] == 6'h10) begin
-                if (data_write_n != 2'b11) audio_func_sel <= data_in[2:0];
-            end
-        end
-    end
 
     always @(posedge clk) begin
         case (audio_func_sel[1:0])

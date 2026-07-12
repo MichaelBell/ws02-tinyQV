@@ -537,17 +537,27 @@ async def test_start(dut):
     await send_instr(dut, InstructionADDI(x1, x0, 0xff).encode())
     await send_instr(dut, InstructionSW(tp, x1, 0x0c).encode())
     await send_instr(dut, InstructionADDI(x1, x0, 1).encode())
-    for j in range(8):
-        await send_instr(dut, InstructionSW(tp, x1, 0x60 + j*4).encode())
+    for j in range(17):
+        await send_instr(dut, InstructionSW(tp, x1, 0x60 + j).encode())
+
+    # All IOs to outputs
+    dut.ui_in.value = "ZZZZZZZZ"
+    await send_instr(dut, InstructionADDI(x1, x0, -1).encode())
+    await send_instr(dut, InstructionSW(tp, x1, 0x48).encode())
 
     for i in range(40):
-        gpio_out = random.randint(0, 255)
-        await send_instr(dut, InstructionADDI(x1, x0, gpio_out).encode())
+        gpio_sel = random.randint(0, (1 << 17) - 1)
+        gpio_out = random.randint(0, (1 << 17) - 1)
+        await send_instr(dut, InstructionLUI(x1, (gpio_out >> 12) + ((gpio_out >> 11) & 1)).encode())
+        await send_instr(dut, InstructionADDI(x1, x1, (gpio_out & 0xfff) - (0x1000 if gpio_out & 0x800 else 0)).encode())
         await send_instr(dut, InstructionSW(tp, x1, 0x40).encode())
         for _ in range(3):
             await send_instr(dut, InstructionADDI(x0, x0, 0).encode())
         for j in range(8):
             assert dut.bidir_PAD.value[j+16] == (1 if (gpio_out >> j) & 1 else 0)
+        for j in range(8,16):
+            assert dut.bidir_PAD.value[j-8] == (1 if (gpio_out >> j) & 1 else 0)
+        assert dut.bidir_PAD.value[24] == (1 if (gpio_out >> 16) & 1 else 0)
 
     logger.info("Done!")
 
