@@ -1,0 +1,18 @@
+magic
+tech gf180mcuD
+magscale 1 5
+timestamp 1781296325
+<< checkpaint >>
+rect -1000 -1000 5432 1100
+<< metal2 >>
+rect 0 0 4432 28
+<< via2 >>
+rect 0 28 4432 100
+<< labels >>
+rlabel metal2 0 0 4432 28 0 asig
+port 1 nsew signal bidirectional
+rlabel metal3 0 28 4432 100 0 pad
+port 2 nsew signal bidirectional
+<< properties >>
+string FIXED_BBOX 0 0 4432 100
+<< end >>
