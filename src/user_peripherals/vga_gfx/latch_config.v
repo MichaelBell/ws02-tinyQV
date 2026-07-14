@@ -34,7 +34,7 @@ module vga_latch_config #(
 `ifdef SCL_sky130_fd_sc_hd
             sky130_fd_sc_hd__dlxtp_1 state (.Q(data_out[i]), .D(data_in[i]), .GATE(wen) );
 `elsif SCL_gf180mcu_as_sc_mcu7t3v3
-            gf180mcu_as_sc_mcu7t3v3__dlxfp_2 p_latch(.ENA(wen), .D(data_in[i]), .Q(data_out[i]));
+            gf180mcu_as_sc_mcu7t3v3__dlxtp_2 p_latch(.ENA(wen), .D(data_in[i]), .Q(data_out[i]));
 `else
             gf180mcu_fd_sc_mcu7t5v0__latq_1 p_latch(.E(wen), .D(data_in[i]), .Q(data_out[i]));
 `endif
