@@ -190,8 +190,9 @@ NON_DEFAULT_RULES:
     width: ["0.6"]
     spacing: ["0.4"]
 
-#DRT_ASSIGN_NDR:
-#  "^dac_out$": NDR_0p6
+DRT_ASSIGN_NDR:
+  "^dac_out$": NDR_0p6
+  "dac_buffered": NDR_0p6
 
 # Do not error on magic DRC violations
 # Note: Passing magic DRC is not required for the submission.
