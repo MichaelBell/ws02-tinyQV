@@ -189,9 +189,12 @@ NON_DEFAULT_RULES:
   NDR_0p6:
     width: ["0.6"]
     spacing: ["0.4"]
+  NDR_1p5:
+    width: ["1.5"]
+    spacing: ["0.5"]
 
 DRT_ASSIGN_NDR:
-  "^dac_out$": NDR_0p6
+  "^dac_out$": NDR_1p5
   "dac_buffered": NDR_0p6
 
 # Do not error on magic DRC violations
