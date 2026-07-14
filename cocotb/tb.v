@@ -37,10 +37,12 @@ module tb #(
   wire [7:0] ui_in;
   reg [7:0] ui_in_base;
   wire [8:0] uo_out;
+  wire [16:0] gpio_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
   assign uio_out = bidir_out[15:8];
   assign uo_out = bidir_out[24:16];
+  assign gpio_out = {bidir_out[24], bidir_out[7:0], bidir_out[23:16]};
   assign uio_oe = bidir_oe[15:8];
 
   reg [3:0] qspi_data_in;
@@ -74,6 +76,7 @@ module tb #(
   reg uart_rx;
   assign ui_in = {uart_rx, game_data, game_clk, game_latch, mhz_clk, spi_miso, ui_in_base[1:0]};
   assign bidir_in[15:0] = {2'b00, use_latency_cfg_n ? qspi_data_in[3:2] : {1'b0, latency_cfg[2]}, 1'b0, use_latency_cfg_n ? qspi_data_in[1:0] : latency_cfg[1:0], 1'b0, ui_in};
+  assign bidir_in[NUM_BIDIR_PADS-1:16] = '0;
 
   reg use_hdmi_n;
   assign input_in = {2'b00, use_hdmi_n, 1'b1, uart_rx};

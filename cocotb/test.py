@@ -111,16 +111,17 @@ async def test_start(dut):
   await send_instr(dut, InstructionSW(tp, x1, 0x0c).encode())
 
   for i in range(40):
-    gpio_sel = random.randint(0, 255)
-    gpio_out = random.randint(0, 255)
-    for j in range(8):
+    gpio_sel = random.randint(0, (1 << 17) - 1)
+    gpio_out = random.randint(0, (1 << 17) - 1)
+    for j in range(17):
         await send_instr(dut, InstructionADDI(x1, x0, (gpio_sel >> j) & 1).encode())
-        await send_instr(dut, InstructionSW(tp, x1, 0x60 + j*4).encode())
-    await send_instr(dut, InstructionADDI(x1, x0, gpio_out).encode())
+        await send_instr(dut, InstructionSW(tp, x1, 0x60 + j).encode())
+    await send_instr(dut, InstructionLUI(x1, (gpio_out >> 12) + ((gpio_out >> 11) & 1)).encode())
+    await send_instr(dut, InstructionADDI(x1, x1, (gpio_out & 0xfff) - (0x1000 if gpio_out & 0x800 else 0)).encode())
     await send_instr(dut, InstructionSW(tp, x1, 0x40).encode())
     for _ in range(3):
         await send_instr(dut, InstructionADDI(x0, x0, 0).encode())
-    assert (dut.uo_out.value.to_unsigned() & gpio_sel) == (gpio_out & gpio_sel)
+    assert (dut.gpio_out.value.to_unsigned() & gpio_sel) == (gpio_out & gpio_sel)
 
   # Ensure uo_out is normally high
   await send_instr(dut, InstructionADDI(x1, x0, 0x80).encode())
@@ -358,7 +359,7 @@ async def test_debug_reg(dut):
     val += 0x102 * i
     await send_instr(dut, InstructionADDI(i+8, x0 if i == 0 else (i+7), 0x102*i).encode())
     await start_nops(dut)
-    for i in range(24):
+    for j in range(24):
         if dut.debug_signal.value == 1:
             break
         await ClockCycles(dut.clk, 1)
@@ -413,7 +414,7 @@ async def test_audio(dut):
 
     # Enable PWM audio
     await send_instr(dut, InstructionADDI(x1, x0, 0x7).encode())
-    await send_instr(dut, InstructionSW(tp, x1, 0x50).encode())
+    await send_instr(dut, InstructionSW(tp, x1, 0x5c).encode())
     
     for pwm in (5, 23, 57, 240):
         await send_instr(dut, InstructionADDI(x1, x0, pwm).encode())
@@ -426,7 +427,7 @@ async def test_audio(dut):
 
     # Disable PWM audio on RAM B CS
     await send_instr(dut, InstructionADDI(x1, x0, 0x3).encode())
-    await send_instr(dut, InstructionSW(tp, x1, 0x50).encode())
+    await send_instr(dut, InstructionSW(tp, x1, 0x5c).encode())
     
     for pwm in (10, 61, 163, 250):
         await send_instr(dut, InstructionADDI(x1, x0, pwm).encode())
@@ -469,8 +470,8 @@ async def test_load_bug(dut):
   await send_instr(dut, encode_clwsp(a3, tp, 0x44))
   await send_instr(dut, encode_clwsp(a2, sp, 12))
   await expect_load(dut, 0x1001000 + 12, 0x123)
-  await read_byte(dut, a3, input_byte)
-  await read_byte(dut, a2, 0x123)
+  assert ((await read_reg(dut, a3) >> 8) & 0xff) == input_byte
+  assert await read_reg(dut, a2) == 0x123
 
 @cocotb.test()
 async def test_load_throughput(dut):
