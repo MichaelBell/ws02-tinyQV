@@ -149,7 +149,7 @@ MAX_TRANSITION_CONSTRAINT: 1.8
 
 # Increase for more logic
 # on your die
-PL_TARGET_DENSITY_PCT: 62
+PL_TARGET_DENSITY_PCT: 65
 GRT_ALLOW_CONGESTION: true
 
 SYNTH_AUTONAME: True
@@ -257,7 +257,7 @@ KLAYOUT_DRC_THREADS: 1
 KLAYOUT_DRC_OPTIONS:
   decks: "all,-antenna,-density,-cup" # disable CUP for now
   variant: ref::$PDK
-  workers: max
+  workers: 4
 
 KLAYOUT_DENSITY_OPTIONS:
   decks: "density"
