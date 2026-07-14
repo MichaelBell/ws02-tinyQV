@@ -15,9 +15,9 @@ sim = os.getenv("SIM", "icarus")
 gl = os.getenv("GL", False)
 pdk_root = os.getenv("PDK_ROOT", Path(__file__).resolve().parent / "../gf180mcu")
 pdk = os.getenv("PDK", "gf180mcuD")
-scl = os.getenv("SCL", "gf180mcu_fd_sc_mcu7t5v0")
+scl = os.getenv("SCL", "gf180mcu_as_sc_mcu7t3v3")
 pad = os.getenv("PAD", "gf180mcu_fd_io")
-sram = os.getenv("SRAM", "gf180mcu_fd_ip_sram")
+sram = os.getenv("SRAM", "gf180mcu_ocd_ip_sram")
 slot = os.getenv("SLOT", "1x1")
 
 hdl_toplevel = "tb_top"
@@ -377,6 +377,7 @@ def chip_top_runner():
         sources.append(src_path / "chip_top.sv")
         sources.append(src_path / "chip_core.sv")
         sources.append(src_path / "project.v")
+        sources.append(src_path / "text_ram.v")
         sources.append(src_path / "tinyQV/cpu/tinyqv.v")
         sources.append(src_path / "tinyQV/cpu/alu.v")
         sources.append(src_path / "tinyQV/cpu/buffer.v")
@@ -440,6 +441,7 @@ def chip_top_runner():
         
         # SRAM macros
         Path(pdk_root) / pdk / f"libs.ref/{sram}/verilog/{sram}__sram512x8m8wm1.v",
+        Path(pdk_root) / pdk / f"libs.ref/{sram}/verilog/{sram}__sram1024x8m8wm1.v",
         
         # Custom IP
         proj_path / "../ip/gf180mcu_ws_ip__logo/vh/gf180mcu_ws_ip__logo.v",
