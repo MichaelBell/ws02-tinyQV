@@ -30,7 +30,7 @@ create_clock [get_pins clk5x_pad/Y] -name fast_clk -period [expr $::env(CLOCK_PE
 set input_setup_delay_value [expr $::env(CLOCK_PERIOD) * 0.6]
 set input_hold_delay_value [expr $::env(CLOCK_PERIOD) * 0.25]
 set output_setup_delay_value [expr $::env(CLOCK_PERIOD) * 0.65]
-set output_hold_delay_value 1
+set output_hold_delay_value 2
 
 puts "\[INFO] Setting output delay to: $output_hold_delay_value / $output_setup_delay_value"
 puts "\[INFO] Setting input delay to: $input_hold_delay_value / $input_setup_delay_value"
