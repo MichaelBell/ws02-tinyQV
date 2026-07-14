@@ -114,7 +114,13 @@ module tinyQV_text_mode_video (
     // VGA for now
     assign video_out = {hsync_r, B[0], G[0], R[0], vsync_r, B[1], G[1], R[1]};
 
-    assign data_out = font_ram_addr_n ? text_out : font_out;
+    wire [7:0] data_out_imm = font_ram_addr_n ? text_out : font_out;
+    reg [7:0] data_out_r;
+    always @(posedge clk) begin
+        if (data_ready_r) data_out_r <= data_out_imm;
+    end
+
+    assign data_out = data_ready_r ? data_out_imm : data_out_r;
     assign data_ready = data_ready_r;
 
     // TODO

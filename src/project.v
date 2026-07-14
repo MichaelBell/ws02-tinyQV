@@ -236,7 +236,7 @@ module tt_um_MichaelBell_tinyQV #(parameter CLOCK_MHZ=24) (
         .addr_in(addr[10:0]),
         .data_in(data_to_write),
 
-        .data_write_n(write_n),
+        .data_write_n(write_n | {2{connect_peripheral != PERI_USER}}),
         .data_read_n(read_n),
 
         .data_out(peri_data_out),
