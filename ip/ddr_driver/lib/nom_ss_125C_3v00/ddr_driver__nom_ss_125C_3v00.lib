@@ -83,20 +83,20 @@ library (ddr_driver) {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("1.24327");
+          values("1.5");
 	}
 	fall_constraint(scalar) {
-          values("1.21644");
+          values("1.5");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("-0.89967");
+          values("-0.5");
 	}
 	fall_constraint(scalar) {
-          values("-0.87452");
+          values("-0.3");
 	}
       }
     }
