@@ -162,8 +162,8 @@ def chip_core_runner():
 
     runner.test(
         hdl_toplevel=hdl_toplevel,
-        test_module="test,video",
-        #test_module="video",
+        test_module="test,vga,dvi",
+        #test_module="dvi",
         plusargs=plusargs,
         waves=True,
     )
