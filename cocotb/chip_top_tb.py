@@ -575,10 +575,6 @@ async def test_uart(dut):
 
     logger.info("Running the UART test...")
 
-    # Set UART RX pin
-    await send_instr(dut, InstructionADDI(x1, x0, 2).encode())
-    await send_instr(dut, InstructionSW(tp, x1, 0x8c).encode())
-
     # Test UART TX
     uart_byte = 0x54
     await send_instr(dut, InstructionADDI(x1, x0, uart_byte).encode())

@@ -27,7 +27,7 @@ The design is intended to run at 3v3 at 25.2MHz.
 | Input[0] | UART RX |
 | Input[1] | Flash programming mode (active low, pulled up) |
 | Input[2] | Use HDMI (active low, pulled up).  If active CLK5x must be supplied and CLK is unused |
-| Bidir[7:0] | Equivalent of Tiny Tapeout in[7:0] |
+| Bidir[7:0] | GPIO 15-8, normally configured as inputs |
 | Bidir[8] | QSPI Flash CS |
 | Bidir[9] | QSPI D0 / MOSI |
 | Bidir[10] | QSPI D1 / MISO |
@@ -36,8 +36,8 @@ The design is intended to run at 3v3 at 25.2MHz.
 | Bidir[13] | QSPI D3 |
 | Bidir[14] | QSPI RAM A CS |
 | Bidir[15] | QSPI RAM B CS / Audio |
-| Bidir[23:16] | Equivalent of Tiny Tapeout out[7:0] |
-| Bidir[24] | Audio output |
+| Bidir[23:16] | GPIO 7-0, normally configured as outputs |
+| Bidir[24] | Audio output / GPIO 16 |
 | Bidir[25] | UART TX |
 | Bidir[26] | UART RTS |
 | Bidir[27] | Debug UART TX |
@@ -72,6 +72,7 @@ The design is intended to run at 3v3 at 25.2MHz.
 | SEL      | 0x800000C (R/W) | Bit 6 enables peripheral output on out6, otherwise out6 is used for debug UART TX (defaults to peripheral output). |
 | DEBUG_UART_DATA | 0x8000018 (W) | Transmits the byte on the debug UART |
 | STATUS   | 0x800001C (R) | Bit 0 indicates whether the debug UART TX is busy, bytes should not be written to the data register while this bit is set. |
+| REG_DEBUG | 0x8000030 (R/W) | Bit 0 enables debug of register data on out3-6. |
 
 ### TIME
 
@@ -89,10 +90,13 @@ If MTIME is after MTIMECMP (by less than 2^30 microseconds to deal with wrap), t
 
 | Register | Address | Description |
 | -------- | ------- | ----------- |
-| OUT | 0x8000040 (RW) | Control for out0-7 if the GPIO peripheral is selected |
-| IN  | 0x8000044 (R) | Reads the current state of in0-7 |
-| AUDIO_FUNC_SEL | 0x8000050 (RW) | Audio function select for audio pin |
-| FUNC_SEL | 0x8000060 - 0x800007F (RW) | Function select for out0-7 |
+| OUT | 0x8000040 (RW) | Control for GPIO 16-0 if the GPIO peripheral is selected |
+| IN  | 0x8000044 (R) | Reads the current state of GPIO 16-0 |
+| OE  | 0x8000048 (RW) | Output enable for GPIO 16-0. Default on for GPIO 16 and 7-0. |
+| PULL_UP | 0x800004c (RW) | Pull up for GPIO 16-0. |
+| PULL_DOWN | 0x8000050 (RW) | Pull down for GPIO 16-0. |
+| AUDIO_FUNC_SEL | 0x800005c (RW) | Audio function select for audio pin |
+| FUNC_SEL | 0x8000060 - 0x8000070 (RW) | Function select for GPIO 16-0. |
 
 | Function Select | Peripheral |
 | --------------- | ---------- |
@@ -101,6 +105,8 @@ If MTIME is after MTIMECMP (by less than 2^30 microseconds to deal with wrap), t
 | 2               | UART       |
 | 3 - 7           | User peripheral 3-7 |
 | 16 - 19         | User byte peripheral 0-3 |
+
+User peripherals see GPIO 15-8 as inputs, and output to 8 peripheral pins.  If GPIO 15-8 are selected as outputs then the corresponding peripheral output from the range 7-0 is connected.  If GPIO 16 has any function other than 1 (GPIO) then it is set to audio.  
 
 | Audio function select | Peripheral |
 | --------------------- | ---------- |
@@ -119,7 +125,7 @@ If audio function select bit 2 is high audio is also presented on `uio[7]` (inst
 | RX_DATA | 0x8000080 (R) | Reads any received byte |
 | TX_BUSY | 0x8000084 (R) | Bit 0 indicates whether the UART TX is busy, bytes should not be written to the data register while this bit is set. Bit 1 indicates whether a received byte is available to be read. |
 | DIVIDER | 0x8000088 (R/W) | 13 bit clock divider to set the UART baud rate |
-| RX_SELECT | 0x800008C (R/W) | Selects UART RX pin |
+| RX_SELECT | 0x800008C (R/W) | Selects UART RX pin, default 2 (dedicated RX) |
 
 | UART RX Select | Pin |
 | -------------- | --- |
@@ -133,7 +139,7 @@ Project template for wafer.space MPW runs using the gf180mcu PDK.
 
 ## Dependencies
 
-Too manage all dependencies, the project template includes a Nix shell with all the required tools.
+To manage all dependencies, the project template includes a Nix shell with all the required tools.
 Install Nix and LibreLane by following the Nix-based installation instructions: https://librelane.readthedocs.io/en/latest/installation/nix_installation/index.html
 To activate the shell, simply run `nix-shell` in the root directory of this repository. The subsequent steps assume that you are in the Nix shell of the project template.
 
