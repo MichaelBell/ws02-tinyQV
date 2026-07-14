@@ -19,7 +19,7 @@ module tinyQV_text_mode_video (
     input         clk5x,        // Required for HDMI output, must be exactly 5x clk, but any phase is allowed.
     input         rst_n,
 
-    input         use_hdmi,     // If high then clk5x must be supplied, and the output is HDMI not VGA.
+    input         use_hdmi_n,     // If high then clk5x must be supplied, and the output is HDMI not VGA.
 
     input [11:0]  addr_in,
     input [7:0]   data_in,      // Data in to the peripheral, bottom 8, 16 or all 32 bits are valid on write.
@@ -37,6 +37,7 @@ module tinyQV_text_mode_video (
 
     output [7:0]  video_out
 );
+    reg rst_n_and_en;
 
     wire text_ram_addr_n = addr_in[11:9] >= 3'b101;
     wire font_ram_addr_n = addr_in[11:10] != 2'b11;
@@ -50,13 +51,14 @@ module tinyQV_text_mode_video (
     reg [1:0] B;
     reg hsync_r;
     reg vsync_r;
+    reg video_active_r;
     wire video_active;
     wire [9:0] pix_x;
     wire [9:0] pix_y;
 
     hvsync_generator sync_gen (
         .clk(clk),
-        .reset(~rst_n),
+        .rst_n(rst_n_and_en),
         .hsync(hsync),
         .vsync(vsync),
         .display_on(video_active),
@@ -64,18 +66,20 @@ module tinyQV_text_mode_video (
         .vpos(pix_y)
     );
 
+    reg [4:0] scroll_offset;
     wire [7:0] text_out;
     wire [7:0] font_out;
     wire [7:0] char_data;
     wire text_read = pix_x[1:0] == 2'b10;
-    wire [11:0] text_addr_y = pix_y[8:4] * 12'd80;
+    wire [4:0] row_addr = (pix_y[9] ? 5'h1f : pix_y[8:4]) + scroll_offset;
+    wire [11:0] text_addr_y = row_addr * 12'd80;
     wire end_of_row = pix_x[9:7] >= 3'b101;
     wire end_of_text_row = end_of_row && pix_y[3:0] == 4'b1111;
     wire [6:0] text_addr_x = end_of_row ? (end_of_text_row ? 7'd80 : 7'd0) : pix_x[9:3] + {6'b0, pix_x[2]};
     wire [11:0] text_addr = text_addr_y + {5'b0, text_addr_x};
     text_ram i_text(
         .clk(clk),
-        .rstn(rst_n),
+        .rstn(rst_n_and_en),
         .data_addr(text_read ? text_addr : addr_in),
         .data_write_n(data_write_n | text_ram_addr_n | pix_x[1]),
         .data_in(data_in),
@@ -85,7 +89,7 @@ module tinyQV_text_mode_video (
     wire font_read = pix_x[1:0] == 2'b11;
     font_8x16 i_font (
         .clk(clk),
-        .rstn(rst_n),
+        .rstn(rst_n_and_en),
         .data_addr(addr_in[9:0]),
         .data_write_n(data_write_n | font_ram_addr_n | pix_x[1]),
         .data_in(data_in),
@@ -109,6 +113,7 @@ module tinyQV_text_mode_video (
     end
 
     // Could use latches, but lets avoid that for now
+    reg video_enable;
     reg [5:0] colour;
     reg [5:0] alt_colour;
     reg [1:0] int_enable;
@@ -117,28 +122,39 @@ module tinyQV_text_mode_video (
 
     always @(posedge clk) begin
         if (~rst_n) begin
+            video_enable <= 0;
+            scroll_offset <= 0;
             colour <= 6'b000111;
             alt_colour <= 6'b000010;
             int_enable <= 2'b00;
             int_status <= 2'b00;
         end else begin
             if (!data_write_n && reg_addr) begin
-                case (addr_in[1:0])
-                    2'b00: colour <= data_in[5:0];
-                    2'b01: alt_colour <= data_in[5:0];
-                    2'b10: int_enable <= data_in[1:0];
-                    2'b11:;
+                case (addr_in[2:0])
+                    3'b000: video_enable <= data_in[0];
+                    3'b001: scroll_offset <= data_in[4:0];
+                    3'b010: int_enable <= data_in[1:0];
+                    3'b100: colour <= data_in[5:0];
+                    3'b101: alt_colour <= data_in[5:0];
+                    default:;
                 endcase
             end
         end
     end
 
+    always @(negedge clk) begin
+        rst_n_and_en <= rst_n & video_enable;
+    end
+
     always @(*) begin
-        case (addr_in[1:0])
-            2'b00: reg_data_out = {2'h0, colour};
-            2'b01: reg_data_out = {2'h0, alt_colour};
-            2'b10: reg_data_out = {6'h0, int_enable};
-            2'b11: reg_data_out = {6'h0, int_status};
+        case (addr_in[2:0])
+            3'b000: reg_data_out = {7'h0, video_enable};
+            3'b001: reg_data_out = {3'h0, scroll_offset};
+            3'b010: reg_data_out = {6'h0, int_enable};
+            3'b011: reg_data_out = {6'h0, int_status};
+            3'b100: reg_data_out = {2'h0, colour};
+            3'b101: reg_data_out = {2'h0, alt_colour};
+            default: reg_data_out = 8'h0;
         endcase
     end
 
@@ -163,10 +179,35 @@ module tinyQV_text_mode_video (
         B <= video_active ? blue : 2'b00;
         hsync_r <= hsync;
         vsync_r <= vsync;
+        video_active_r <= video_active;
     end
 
-    // VGA for now
-    assign video_out = {hsync_r, B[0], G[0], R[0], vsync_r, B[1], G[1], R[1]};
+    reg rst_5x_sync;
+    reg rst_n_and_en_5x;
+    always @(posedge clk5x) begin
+        rst_5x_sync <= rst_n_and_en;
+        rst_n_and_en_5x <= rst_5x_sync;
+    end
+
+    wire [3:0] dvi_p;
+    wire [3:0] dvi_n;
+    smoldvi i_dvi (
+        .clk_pix(clk),
+        .rst_n_pix(rst_n_and_en),
+        .clk_bit(clk5x),
+        .rst_n_bit(rst_n_and_en_5x),
+        .r(R),
+        .g(G),
+        .b(B),
+        .hsync(hsync_r),
+        .vsync(vsync_r),
+        .den(video_active_r),
+        .dvi_p(dvi_p),
+        .dvi_n(dvi_n)
+    );
+
+    assign video_out = use_hdmi_n ? {hsync_r, B[0], G[0], R[0], vsync_r, B[1], G[1], R[1]} :
+                                    {dvi_n[3], dvi_n[0], dvi_n[1], dvi_n[2], dvi_p[3], dvi_p[0], dvi_p[1], dvi_p[2]};
 
     wire [7:0] data_out_imm =  reg_addr ? reg_data_out : 
             font_ram_addr_n ? text_out : font_out;
@@ -181,6 +222,6 @@ module tinyQV_text_mode_video (
 
     assign interrupt = |(int_status & int_enable);
 
-    wire _unused = &{pix_y[9], data_read_complete, 1'b0};
+    wire _unused = &{data_read_complete, 1'b0};
 
 endmodule

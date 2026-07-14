@@ -1,5 +1,3 @@
-
-
 `default_nettype none
 
 `include "slot_defines.svh"
@@ -15,14 +13,14 @@ module tb_top #(
 
     reg uart_rx;
     reg prog_n;
-    wire [3:0] input_PAD;
-    assign input_PAD = {2'b00, prog_n, uart_rx};
+    reg use_hdmi_n;
+    reg prog_cs;
+    reg prog_mosi;
+    wire [4:0] input_PAD;
+    assign input_PAD = {prog_cs, prog_mosi, use_hdmi_n, prog_n, uart_rx};
     wire uart_tx;
     wire uart_rts;
 
-    reg prog_cs;
-    reg prog_sck;
-    reg prog_mosi;
     wire prog_miso;
 
     reg [7:0] ui_in;
@@ -40,13 +38,14 @@ module tb_top #(
     assign audio = bidir_PAD[24];
     assign uart_tx = bidir_PAD[25];
     assign uart_rts = bidir_PAD[26];
-    assign prog_miso = bidir_PAD[29];
-    assign bidir_PAD[32:30] = {prog_sck, prog_mosi, prog_cs};
+    assign prog_miso = bidir_PAD[37];
 
     wire clk_PAD;
     wire rst_n_PAD;
+    wire clk5x_PAD;
+    wire prog_clk_PAD;
 
-    wire [3:0] analog_PAD;
+    wire [0:0] analog_PAD;
 
 `ifdef USE_POWER_PINS
   wire VPWR = 1'b1;
@@ -61,6 +60,8 @@ module tb_top #(
 
         .clk_PAD(clk_PAD),
         .rst_n_PAD(rst_n_PAD),
+        .clk5x_PAD(clk5x_PAD),
+        .prog_clk_PAD(prog_clk_PAD),
         
         .input_PAD(input_PAD),
         .bidir_PAD(bidir_PAD),

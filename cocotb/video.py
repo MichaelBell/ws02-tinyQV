@@ -22,10 +22,10 @@ from test_util import reset, start_read, send_instr, start_nops, stop_nops, read
 if not os.path.exists("output"):
     os.mkdir("output")
 
-async def capture_frames(dut, n=1, capture_start=0):
+async def capture_frames(dut, n=1, capture_start=0, frame_num_start=0):
     image = Image.new("RGB", (640, 480))
 
-    await ClockCycles(dut.clk, 2)
+    await ClockCycles(dut.clk, 20)
 
     # Test sync
     for i in range(525*n+5):
@@ -39,6 +39,7 @@ async def capture_frames(dut, n=1, capture_start=0):
                 blue = dut.blue.value.to_unsigned() * 85
                 image.putpixel((j, i % 525), (red, green, blue))            
             await ClockCycles(dut.clk, 1)
+            #print(j, end="")
         for j in range(96):
             assert dut.vsync.value == vsync
             assert dut.hsync.value == 0
@@ -49,9 +50,7 @@ async def capture_frames(dut, n=1, capture_start=0):
             await ClockCycles(dut.clk, 1)
 
         if i % 525 == 480:
-            image.save(f"output/frame{i // 525}.png")
-
-    await stop_nops()
+            image.save(f"output/frame{frame_num_start + (i // 525)}.png")
 
 
 @cocotb.test()
@@ -65,8 +64,6 @@ async def test_frames(dut):
     # Reset
     await reset(dut)
 
-    capture_task = cocotb.start_soon(capture_frames(dut, 2, 100))
-
     # Should start reading flash after 1 cycle
     await ClockCycles(dut.clk, 1)
 
@@ -74,6 +71,14 @@ async def test_frames(dut):
 
     await send_instr(dut, InstructionLUI(a4, 0x8800).encode())
     await send_instr(dut, InstructionADDI(a4, a4, 0x400).encode())
+
+    # Enable the video RAM
+    await send_instr(dut, InstructionADDI(x1, x0, 1).encode())
+    await send_instr(dut, InstructionSB(a4, x1, 0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x0, 0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x1, 0x600).encode())
+
+    capture_task = cocotb.start_soon(capture_frames(dut, 2, 100))
 
     RAM_SIZE = 2560
     RAM = [0]*RAM_SIZE
@@ -85,4 +90,15 @@ async def test_frames(dut):
     await start_nops(dut)
 
     await capture_task
+    await stop_nops()
+
+    # Scroll 1
+    await send_instr(dut, InstructionADDI(x1, x0, 1).encode())
+    await send_instr(dut, InstructionSB(a4, x1, 0x601).encode())
+    await send_instr(dut, InstructionSB(a4, x0, 0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x1, 0x600).encode())
+
+    await start_nops(dut)
+    await capture_frames(dut, 1, 0, 2)
+
     await stop_nops()

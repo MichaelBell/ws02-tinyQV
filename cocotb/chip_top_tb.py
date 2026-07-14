@@ -6,6 +6,8 @@ import random
 import logging
 from pathlib import Path
 
+from PIL import Image
+
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer, Edge, RisingEdge, FallingEdge, ClockCycles
@@ -32,10 +34,12 @@ async def set_defaults(dut):
     dut.uart_rx.value = 1
     dut.ui_in.value = 0x80
     dut.prog_n.value = 1
+    dut.use_hdmi_n.value = 1
 
-async def start_clock(clock, freq=25):
-    """Start the clock @ freq MHz"""
-    c = Clock(clock, 1 / freq * 1000, "ns")
+
+async def start_clock(clock):
+    """Start the clock"""
+    c = Clock(clock, 39.682, "ns")
     cocotb.start_soon(c.start())
 
 
@@ -456,7 +460,7 @@ async def read_byte(dut, reg, expected_val):
       else:
           await Timer(5, "ns")
   assert dut.bidir_PAD.value[27] == 0
-  bit_time = 250
+  bit_time = 1000
   await Timer(bit_time / 2, "ns")
   assert dut.bidir_PAD.value[27] == 0
   for i in range(8):
@@ -467,6 +471,45 @@ async def read_byte(dut, reg, expected_val):
   assert dut.bidir_PAD.value[27] == 1
 
   await stop_nops()
+
+VSYNC_PAD = 32
+HSYNC_PAD = 36
+R0_PAD = 33
+G0_PAD = 34
+B0_PAD = 35
+R1_PAD = 29
+G1_PAD = 30
+B1_PAD = 31
+
+async def capture_vga_frames(dut, n=1, capture_start=0, frame_num_start=0):
+    image = Image.new("RGB", (640, 480))
+
+    await ClockCycles(dut.clk_PAD, 19)
+
+    # Test sync
+    for i in range(525*n+5):
+        vsync = 0 if (480+10) <= i % 525 < (480+12) else 1
+        for j in range(640+16):
+            assert dut.bidir_PAD.value[VSYNC_PAD] == vsync
+            assert dut.bidir_PAD.value[HSYNC_PAD] == 1
+            if i % 525 < 480 and j < 640 and i >= capture_start:
+                red = ((int(dut.bidir_PAD.value[R1_PAD]) << 1) | int(dut.bidir_PAD.value[R0_PAD])) * 85
+                green = ((int(dut.bidir_PAD.value[G1_PAD]) << 1) | int(dut.bidir_PAD.value[G0_PAD])) * 85
+                blue = ((int(dut.bidir_PAD.value[B1_PAD]) << 1) | int(dut.bidir_PAD.value[B0_PAD])) * 85
+                image.putpixel((j, i % 525), (red, green, blue))
+            await ClockCycles(dut.clk_PAD, 1)
+        for j in range(96):
+            assert dut.bidir_PAD.value[VSYNC_PAD] == vsync
+            assert dut.bidir_PAD.value[HSYNC_PAD] == 0
+            await ClockCycles(dut.clk_PAD, 1)
+        for j in range(48):
+            assert dut.bidir_PAD.value[VSYNC_PAD] == vsync
+            assert dut.bidir_PAD.value[HSYNC_PAD] == 1
+            await ClockCycles(dut.clk_PAD, 1)
+
+        if i % 525 == 480:
+            image.save(f"output/frame{frame_num_start + (i // 525)}.png")
+
 
 
 @cocotb.test()
@@ -485,7 +528,7 @@ async def test_start(dut):
 
     # Read ID
     await send_instr(dut, InstructionLW(x1, tp, 0x8).encode())
-    assert await read_reg(dut, x1) == ord('1') | (ord('0') << 8) | (ord('S') << 16) | (ord('W') << 24)
+    assert await read_reg(dut, x1) == ord('2') | (ord('0') << 8) | (ord('S') << 16) | (ord('W') << 24)
 
     # Set up GPIO
     await send_instr(dut, InstructionADDI(x1, x0, 0xff).encode())
@@ -595,6 +638,41 @@ async def test_uart(dut):
     logger.info("Done!")
 
 @cocotb.test()
+async def test_prog(dut):
+    """Check prog works"""
+
+    # Create a logger for this testbench
+    logger = logging.getLogger("my_testbench")
+    logger.info("Startup sequence...")
+
+    await set_defaults(dut)
+    await start_clock(dut.clk_PAD)
+    assert dut.prog_miso.value == 'Z'
+    dut.rst_n_PAD.value = 0
+    dut.qspi_data.value = "ZZZZ"
+    await Timer(200, "ns")
+    assert dut.prog_miso.value == 'Z'
+
+    dut.prog_n.value = 0
+
+    for i in range(16):
+        dut.prog_cs.value = (1 if (i & 1) else 0)
+        dut.prog_clk_PAD.value = (1 if (i & 2) else 0)
+        dut.prog_mosi.value = (1 if (i & 4) else 0)
+        dut.qspi_data.value = f"ZZ{1 if (i & 8) else 0}Z"
+
+        await Timer(10, "ns")
+
+        assert dut.bidir_PAD.value[8] == (1 if (i & 1) else 0)
+        assert dut.bidir_PAD.value[11] == (1 if (i & 2) else 0)
+        assert dut.bidir_PAD.value[9] == (1 if (i & 4) else 0)
+        assert dut.prog_miso.value == (1 if (i & 8) else 0)
+
+    dut.prog_n.value = 1
+    await Timer(10, "ns")
+    assert dut.prog_miso.value == 'Z'
+
+@cocotb.test()
 async def test_scratch_memory(dut):
     # Create a logger for this testbench
     logger = logging.getLogger("my_testbench")
@@ -692,6 +770,14 @@ async def test_video_memory(dut):
     await send_instr(dut, InstructionLUI(a4, 0x8800).encode())
     await send_instr(dut, InstructionADDI(a4, a4, 0x400).encode())
 
+    # Enable the video RAM
+    # Need to bounce the enable to get the verilog model of the memory to work
+    # I don't expect the actual chip to need this.
+    await send_instr(dut, InstructionADDI(x1, x0, 1).encode())
+    await send_instr(dut, InstructionSB(a4, x1, 0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x0, 0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x1, 0x600).encode())
+
     RAM_SIZE = 2560
     RAM = [0]*RAM_SIZE
     for i in range(0, RAM_SIZE, 1):
@@ -745,6 +831,12 @@ async def test_font_memory(dut):
 
     await send_instr(dut, InstructionLUI(a4, 0x8801).encode())
 
+    # Enable the video RAM
+    await send_instr(dut, InstructionADDI(x1, x0, 1).encode())
+    await send_instr(dut, InstructionSB(a4, x1, -0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x0, -0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x1, -0x600).encode())
+
     RAM_SIZE = 1024
     RAM = [0]*RAM_SIZE
     for i in range(0, RAM_SIZE, 1):
@@ -784,6 +876,66 @@ async def test_font_memory(dut):
             await send_instr(dut, InstructionSB(a4, x1, write_addr-0x400).encode())
             RAM[write_addr] = write_val
 
+@cocotb.test()
+async def test_vga_text(dut):
+    # Create a logger for this testbench
+    logger = logging.getLogger("my_testbench")
+
+    logger.info("Startup sequence...")
+
+    # Start up
+    await start_up(dut)
+
+    logger.info("Running the VGA text test...")
+
+    await send_instr(dut, InstructionLUI(a4, 0x8801).encode())
+
+    # Enable the video RAM
+    await send_instr(dut, InstructionADDI(x1, x0, 1).encode())
+    await send_instr(dut, InstructionSB(a4, x1, -0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x0, -0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x1, -0x600).encode())
+
+    # Setup custom font
+    for i in range(16):
+        for j in range(16):
+            addr = i*32+j*2-0x400
+            await send_instr(dut, InstructionADDI(x1, x0, 0xe4 if i == j else 0).encode())
+            await send_instr(dut, InstructionSB(a4, x1, addr).encode())
+            await send_instr(dut, InstructionADDI(x1, x0, 0x1b if i == j else 0).encode())
+            await send_instr(dut, InstructionSB(a4, x1, addr+1).encode())
+    for i in range(8):
+        for j in range(16):
+            addr = (i+16)*32+j*2-0x400
+            await send_instr(dut, InstructionADDI(x1, x0, (3 << (2*i)) & 0xff).encode())
+            await send_instr(dut, InstructionSB(a4, x1, addr).encode())
+            await send_instr(dut, InstructionADDI(x1, x0, 3 << (2*i-8) if i >= 4 else 0).encode())
+            await send_instr(dut, InstructionSB(a4, x1, addr+1).encode())
+    for i in range(8):
+        for j in range(16):
+            addr = (i+24)*32+j*2-0x400
+            await send_instr(dut, InstructionADDI(x1, x0, ~(i*16 + j) & 0xff).encode())
+            await send_instr(dut, InstructionSB(a4, x1, addr).encode())
+            await send_instr(dut, InstructionADDI(x1, x0, i*16 + j).encode())
+            await send_instr(dut, InstructionSB(a4, x1, addr+1).encode())
+
+    await send_instr(dut, InstructionLUI(a4, 0x8800).encode())
+    await send_instr(dut, InstructionADDI(a4, a4, 0x400).encode())
+
+    # Setup video data
+    for i in range(30*80):
+        await send_instr(dut, InstructionADDI(x1, x0, i & 0xff).encode())
+        await send_instr(dut, InstructionSB(a4, x1, i-0x400).encode())
+
+    # Bounce video enable to get known sync
+    await send_instr(dut, InstructionSB(a4, x0, 0x600).encode())
+    await send_instr(dut, InstructionSB(a4, x1, 0x600).encode())
+
+    await start_nops(dut)
+
+    await capture_vga_frames(dut)
+    await stop_nops()
+
 
 def chip_top_runner():
 
@@ -818,6 +970,11 @@ def chip_top_runner():
         sources.append(src_path / "video/text_mode_video.v")
         sources.append(src_path / "video/hsync_generator.v")
         sources.append(src_path / "video/font.v")
+        sources.append(src_path / "video/simple_tmds_encode.v")
+        sources.append(src_path / "video/smoldvi.v")
+        sources.append(src_path / "video/smoldvi_clock_driver.v")
+        sources.append(src_path / "video/smoldvi_fast_gearbox.v")
+        sources.append(src_path / "video/smoldvi_serialiser.v")
         sources.append(src_path / "tinyQV/cpu/tinyqv.v")
         sources.append(src_path / "tinyQV/cpu/alu.v")
         sources.append(src_path / "tinyQV/cpu/buffer.v")

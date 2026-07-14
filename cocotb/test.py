@@ -20,7 +20,7 @@ from test_util import reset, start_read, send_instr, start_nops, stop_nops, read
 async def test_start(dut):
   dut._log.info("Start")
   
-  clock = Clock(dut.clk, 41.666, unit="ns")
+  clock = Clock(dut.clk, 39.682, unit="ns")
   cocotb.start_soon(clock.start())
 
   # Reset
@@ -32,7 +32,7 @@ async def test_start(dut):
 
   # Read ID
   await send_instr(dut, InstructionLW(x1, tp, 0x8).encode())
-  assert await read_reg(dut, x1) == ord('1') | (ord('0') << 8) | (ord('S') << 16) | (ord('W') << 24)
+  assert await read_reg(dut, x1) == ord('2') | (ord('0') << 8) | (ord('S') << 16) | (ord('W') << 24)
   
   for i in range(8):
     await send_instr(dut, InstructionADDI(i+8, x0, 0x102*i).encode())
@@ -234,7 +234,7 @@ async def test_time_limit(dut):
 async def test_scratch_memory(dut):
     dut._log.info("Start")
     
-    clock = Clock(dut.clk, 41.666, unit="ns")
+    clock = Clock(dut.clk, 39.682, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
@@ -319,7 +319,7 @@ async def test_scratch_memory(dut):
 async def test_csr(dut):
     dut._log.info("Start")
     
-    clock = Clock(dut.clk, 41.666, unit="ns")
+    clock = Clock(dut.clk, 39.682, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
@@ -342,7 +342,7 @@ async def test_csr(dut):
 async def test_debug_reg(dut):
   dut._log.info("Start")
   
-  clock = Clock(dut.clk, 41.666, unit="ns")
+  clock = Clock(dut.clk, 39.682, unit="ns")
   cocotb.start_soon(clock.start())
 
   # Reset
@@ -401,7 +401,7 @@ async def test_pwm(dut, pwm_value, pwm_strobe, use_ram_b):
 async def test_audio(dut):
     dut._log.info("Start")
 
-    clock = Clock(dut.clk, 41.666, unit="ns")
+    clock = Clock(dut.clk, 39.682, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
@@ -441,7 +441,7 @@ async def test_audio(dut):
 async def test_load_bug(dut):
   dut._log.info("Start")
   
-  clock = Clock(dut.clk, 41.666, unit="ns")
+  clock = Clock(dut.clk, 39.682, unit="ns")
   cocotb.start_soon(clock.start())
 
   # Reset
@@ -476,7 +476,7 @@ async def test_load_bug(dut):
 async def test_load_throughput(dut):
     dut._log.info("Start")
 
-    clock = Clock(dut.clk, 41.666, unit="ns")
+    clock = Clock(dut.clk, 39.682, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
@@ -518,7 +518,7 @@ async def test_load_throughput(dut):
 async def test_multistore_interrupt(dut):
     dut._log.info("Start")
 
-    clock = Clock(dut.clk, 41.666, unit="ns")
+    clock = Clock(dut.clk, 39.682, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
@@ -782,7 +782,7 @@ ops_alu = [
 async def test_random_alu(dut):
     dut._log.info("Start")
   
-    clock = Clock(dut.clk, 41.666, unit="ns")
+    clock = Clock(dut.clk, 39.682, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
@@ -1079,7 +1079,7 @@ ops = [
 async def test_random(dut):
     dut._log.info("Start")
   
-    clock = Clock(dut.clk, 41.666, unit="ns")
+    clock = Clock(dut.clk, 39.682, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
