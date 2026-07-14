@@ -66,7 +66,7 @@ module tb_top #(
         .input_PAD(input_PAD),
         .bidir_PAD(bidir_PAD),
         
-        .analog_PAD(analog_PAD)
+        .analog_ASIG(analog_PAD)
     );
 
 endmodule

@@ -123,7 +123,7 @@ module tb #(
       .bidir_pu(bidir_pu),
       .bidir_pd(bidir_pd),
 
-      .analog(analog)
+      .dac_out(analog)
   );
 
 endmodule
