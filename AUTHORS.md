@@ -16,6 +16,7 @@ All categories arranged alphabetically.
 
 ## TinyQV Peripherals
 
+* [Han](https://github.com/HX2003)
 * [Matt Venn](https://github.com/mattvenn)
 * [Rebecca G. Bettencourt](https://github.com/RebeccaRGB)
 * [Renaldas Zioma](https://github.com/rejunity)
