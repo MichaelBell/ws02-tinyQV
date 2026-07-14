@@ -119,6 +119,7 @@ module tqvp_spi_peripheral (
     reg tx_pending;
     reg dc_ctrl;
     reg end_txn;
+    reg miso_select;
     reg [7:0] tx_data;
 
     wire spi_busy;
@@ -129,6 +130,7 @@ module tqvp_spi_peripheral (
             tx_pending <= 0;
             dc_ctrl <= 0;
             end_txn <= 1;
+            miso_select <= 0;
         end else begin
             if (data_write) begin
                 if (address == 4'h0) begin
@@ -137,6 +139,8 @@ module tqvp_spi_peripheral (
                 end else if (address == 4'h1) begin
                     tx_pending <= 1;
                     tx_data <= data_in;
+                end else if (address == 4'h5) begin
+                    miso_select <= data_in[0];
                 end
             end else begin
                 if (!spi_busy && tx_pending) begin
@@ -147,16 +151,16 @@ module tqvp_spi_peripheral (
     end
 
     wire start = !data_write && !spi_busy && tx_pending;
-    wire spi_select;
+    wire spi_select, spi_clk_out, spi_mosi;
 
     tqvp_spi_ctrl i_spi_ctrl (
         .clk(clk),
         .rstn(rst_n),
 
-        .spi_miso(ui_in[2]),
+        .spi_miso(miso_select ? ui_in[6] : ui_in[2]),
         .spi_select(spi_select),
-        .spi_clk_out(uo_out[5]),
-        .spi_mosi(uo_out[3]),
+        .spi_clk_out(spi_clk_out),
+        .spi_mosi(spi_mosi),
         .spi_dc(uo_out[2]),
 
         .dc_in(dc_ctrl),
@@ -171,8 +175,10 @@ module tqvp_spi_peripheral (
         .read_latency_in(data_in[7])
     );
 
-    assign uo_out[1:0] = {2{spi_select}};
+    assign uo_out[1:0] = {spi_mosi, spi_select};
+    assign uo_out[3] = spi_clk_out;
     assign uo_out[4] = spi_select;
+    assign uo_out[5] = spi_mosi;
     assign uo_out[7:6] = {2{spi_select}};
 
     // Address 0 reads the control/status register.  
@@ -182,9 +188,10 @@ module tqvp_spi_peripheral (
     assign data_out = (address == 4'h0) ? {4'b0000, dc_ctrl, end_txn, tx_pending, spi_busy} :
                       (address == 4'h1) ? tx_data :
                       (address == 4'h2) ? rx_data :
-                      8'h0;    
+                      (address == 4'h5) ? {7'h0, miso_select} :
+                      8'h0;
 
     // List all unused inputs to prevent warnings
-    wire _unused = &{ui_in[7:3], ui_in[1:0], 1'b0};
+    wire _unused = &{ui_in[7], ui_in[5:3], ui_in[1:0], 1'b0};
 
 endmodule
