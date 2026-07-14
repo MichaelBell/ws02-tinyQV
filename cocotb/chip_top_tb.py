@@ -953,9 +953,10 @@ def chip_top_runner():
     defines[f"PAD_{pad}"] = True
     defines[f"SRAM_{sram}"] = True
 
+    # SCL models - needed for ddr implementation even non-GL
+    sources.append(Path(pdk_root) / pdk / "libs.ref" / scl / "verilog" / f"{scl}.v")
     if gl:
         # SCL models
-        sources.append(Path(pdk_root) / pdk / "libs.ref" / scl / "verilog" / f"{scl}.v")
         if scl != "gf180mcu_as_sc_mcu7t3v3":
             sources.append(Path(pdk_root) / pdk / "libs.ref" / scl / "verilog" / "primitives.v")
 
@@ -1049,6 +1050,7 @@ def chip_top_runner():
         proj_path / "../ip/gf180mcu_ws_ip__shuttle_id/vh/gf180mcu_ws_ip__shuttle_id.v",
         proj_path / "../ip/gf180mcu_ws_ip__project_id/vh/gf180mcu_ws_ip__project_id.v",
         
+        proj_path / "../ip/ddr_driver/verilog/ddr_driver.v",
 
         # Testbench
         "tb_top.v"
