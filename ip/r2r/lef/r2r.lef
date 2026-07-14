@@ -1,0 +1,91 @@
+VERSION 5.7 ;
+  NOWIREEXTENSIONATPIN ON ;
+  DIVIDERCHAR "/" ;
+  BUSBITCHARS "[]" ;
+MACRO r2r
+  CLASS BLOCK ;
+  FOREIGN r2r ;
+  ORIGIN 0.000 0.000 ;
+  SIZE 66.800 BY 55.850 ;
+  PIN b0
+    PORT
+      LAYER Metal2 ;
+        RECT 3.300 -2.600 5.300 -0.800 ;
+    END
+  END b0
+  PIN VGND
+    ANTENNADIFFAREA 85.780800 ;
+    PORT
+      LAYER Metal2 ;
+        RECT 10.500 -2.600 12.500 -0.800 ;
+    END
+  END VGND
+  PIN b1
+    PORT
+      LAYER Metal2 ;
+        RECT 17.700 -2.600 19.700 -0.800 ;
+    END
+  END b1
+  PIN b2
+    PORT
+      LAYER Metal2 ;
+        RECT 24.900 -2.600 26.900 -0.800 ;
+    END
+  END b2
+  PIN b3
+    PORT
+      LAYER Metal2 ;
+        RECT 32.100 -2.600 34.100 -0.800 ;
+    END
+  END b3
+  PIN b4
+    PORT
+      LAYER Metal2 ;
+        RECT 39.300 -2.600 41.300 -0.800 ;
+    END
+  END b4
+  PIN b5
+    PORT
+      LAYER Metal2 ;
+        RECT 46.500 -2.600 48.500 -0.800 ;
+    END
+  END b5
+  PIN b6
+    PORT
+      LAYER Metal2 ;
+        RECT 53.700 -2.600 55.700 -0.800 ;
+    END
+  END b6
+  PIN b7
+    PORT
+      LAYER Metal2 ;
+        RECT 60.900 -2.600 62.900 -0.800 ;
+    END
+  END b7
+  PIN out
+    PORT
+      LAYER Metal2 ;
+        RECT 57.300 -2.600 59.300 -0.800 ;
+    END
+  END out
+  OBS
+      LAYER Pwell ;
+        RECT -0.300 -0.300 66.460 53.280 ;
+      LAYER Metal1 ;
+        RECT -0.300 -0.115 66.500 53.095 ;
+      LAYER Metal2 ;
+        RECT -0.300 -0.500 62.900 5.600 ;
+        RECT -0.300 -0.800 3.000 -0.500 ;
+        RECT 5.600 -0.800 10.200 -0.500 ;
+        RECT 12.800 -0.800 17.400 -0.500 ;
+        RECT 20.000 -0.800 24.600 -0.500 ;
+        RECT 27.200 -0.800 31.800 -0.500 ;
+        RECT 34.400 -0.800 39.000 -0.500 ;
+        RECT 41.600 -0.800 46.200 -0.500 ;
+        RECT 48.800 -0.800 53.400 -0.500 ;
+        RECT 56.000 -0.800 57.000 -0.500 ;
+        RECT 59.600 -0.800 60.600 -0.500 ;
+  END
+END r2r
+END LIBRARY
+
